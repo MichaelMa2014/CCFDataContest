@@ -9,6 +9,8 @@ from __future__ import unicode_literals
 from __future__ import with_statement
 
 import model.mnb
+import model.rf
 
 if __name__ == '__main__':
     model.mnb.run()
+    model.rf.run()
