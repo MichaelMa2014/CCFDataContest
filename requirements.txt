@@ -1,0 +1,10 @@
+gensim
+jieba
+keras
+nltk
+numpy
+pandas
+pynlpir
+scipy
+sklearn
+theano
