@@ -4,7 +4,7 @@
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
-Multinomial Naive Bayes|0.542631712904|0.787282941777|0.563586206897|0.631166953859|/
+Multinomial Naive Bayes|0.542631712904|0.787282941777|0.563586206897|0.631166953859|0.01669(wtf???)
 
 PS: higher is better
 

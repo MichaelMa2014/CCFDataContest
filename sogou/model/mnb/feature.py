@@ -87,7 +87,6 @@ def build_train_set(label, validation_split=0.0):
     # le = sklearn.preprocessing.LabelEncoder()
     # train_df[label] = le.fit_transform(train_df[label])
     target = train_df[label].astype('category')
-    print(target)
     train_df.drop(label, axis=1, inplace=True)
     print(train_df.shape)
 
