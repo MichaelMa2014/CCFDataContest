@@ -20,8 +20,10 @@ chinese_stopwords = {word[:-1] for word in codecs.open('../util/stopwords.txt', 
 
 stopwords = list(english_stopwords | chinese_stopwords | set(string.punctuation))
 
+# 字段名
 label_col = ['age', 'gender', 'education']
 
+# 每个字段的取值范围
 ranges = {
     'age': range(7),
     'gender': range(3),
@@ -29,7 +31,10 @@ ranges = {
 }
 
 
-def load_train():
+def load_train_data():
+    """
+    读入训练集数据
+    """
     # train_id = []
     train_age = []
     train_gender = []
@@ -47,7 +52,10 @@ def load_train():
         {'age': train_age, 'gender': train_gender, 'education': train_education, 'query': train_query})
 
 
-def load_test():
+def load_test_data():
+    """
+    读入测试集数据
+    """
     test_id = []
     test_query = []
     with codecs.open('./data/user_tag_query.2W.TEST', encoding='gb18030') as test_f:

@@ -12,16 +12,25 @@ import sklearn.naive_bayes
 
 import model.mnb.feature
 
+import submissions
+
 
 def build(label):
-    X_train, y_train, X_validation, y_validation = model.mnb.feature.get_train(label)
+    """
+    构建分类器
+    :param str|unicode label: 类别标签
+    """
+    X_train, y_train, X_val, y_val = model.mnb.feature.build_train_set(label, 0.2)
 
     clf = sklearn.naive_bayes.MultinomialNB()
     clf.fit(X_train, y_train)
 
-    validation_result = clf.score(X_validation, y_validation)
-    print(validation_result)
-    return clf, validation_result
+    val_result = clf.score(X_val, y_val)
+    print(val_result)
+
+    clf.partial_fit(X_val, y_val)
+
+    return clf, val_result
 
 
 def run():
@@ -32,8 +41,10 @@ def run():
     val_final = (val_age + val_gender + val_education) / 3
     print(val_final)
 
-    # X_test, test_id = model.mnb.feature.get_test();
-    #
-    # pred_age = clf_age.predict(X_test)
-    #
-    # submissions.save_csv(test_id, pred_age, '{file_name}.csv'.format(file_name=__file__[:-3]))
+    X_test, test_id = model.mnb.feature.build_test_set()
+
+    pred_age = clf_age.predict(X_test)
+    pred_gender = clf_gender.predict(X_test)
+    pred_education = clf_education.predict(X_test)
+
+    submissions.save_csv(test_id, pred_age, pred_gender, pred_education, 'mnb.csv')
