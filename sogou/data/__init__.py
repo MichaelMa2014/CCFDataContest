@@ -14,6 +14,8 @@ import string
 import nltk
 import pandas
 
+import conf
+
 # 加载nltk.corpus.stopwords停用词
 english_stopwords = set(nltk.corpus.stopwords.words('english'))
 chinese_stopwords = {word[:-1] for word in codecs.open('../util/stopwords.txt', 'rU', encoding='utf-8')}
@@ -40,7 +42,7 @@ def load_train_data():
     train_gender = []
     train_education = []
     train_query = []
-    with codecs.open('./data/user_tag_query.2W.TRAIN', encoding='gb18030') as train_f:
+    with codecs.open('./data/user_tag_query.2W.TRAIN', encoding=conf.ENCODING) as train_f:
         for line in train_f:
             array = line.split('\t')
             # train_id.append(array[0])
@@ -58,7 +60,7 @@ def load_test_data():
     """
     test_id = []
     test_query = []
-    with codecs.open('./data/user_tag_query.2W.TEST', encoding='gb18030') as test_f:
+    with codecs.open('./data/user_tag_query.2W.TEST', encoding=conf.ENCODING) as test_f:
         for line in test_f:
             array = line.split('\t')
             test_id.append(array[0])

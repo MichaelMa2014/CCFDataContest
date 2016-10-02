@@ -12,6 +12,8 @@ import csv
 
 import pandas
 
+import conf
+
 
 def save_csv(ids, pred_age, pred_gender, pred_education, file_name):
     """
@@ -22,5 +24,5 @@ def save_csv(ids, pred_age, pred_gender, pred_education, file_name):
     :param str|unicode file_name: 文件名
     """
     pandas.DataFrame({'id': ids, 'age': pred_age, 'gender': pred_gender, 'education': pred_education}).to_csv(
-        './submissions/%s' % file_name, sep=' ', columns=['id', 'age', 'gender', 'education'], header=False,
-        index=False, encoding='gb18030', quoting=csv.QUOTE_NONE)
+        './submissions/%s' % file_name, sep=b' ', columns=['id', 'age', 'gender', 'education'], header=False,
+        index=False, encoding=conf.ENCODING, quoting=csv.QUOTE_NONE)

@@ -10,7 +10,7 @@ from __future__ import with_statement
 
 import sklearn.naive_bayes
 
-import model.mnb.feature
+import feature.bow
 import submissions
 
 
@@ -19,7 +19,7 @@ def build(label):
     构建分类器
     :param str|unicode label: 类别标签
     """
-    X_train, y_train, X_val, y_val = model.mnb.feature.build_train_set(label, 0.1)
+    X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, 0.1)
 
     clf = sklearn.naive_bayes.MultinomialNB()
     clf.fit(X_train, y_train)
@@ -40,7 +40,7 @@ def run():
     val_final = (val_age + val_gender + val_education) / 3
     print(val_final)
 
-    X_test, test_id = model.mnb.feature.build_test_set()
+    X_test, test_id = feature.bow.build_test_set()
 
     pred_age = clf_age.predict(X_test)
     pred_gender = clf_gender.predict(X_test)

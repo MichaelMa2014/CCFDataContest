@@ -90,7 +90,7 @@ def text_merge(df, features, col_name):
     """
     words = df.apply(lambda wl: sum((wl[feature] for feature in features), []), axis=1)
     words.name = col_name
-    words = words.map(lambda x: ' '.join(x))
+    words = words.map(lambda wl: ' '.join(wl))
     df = df.join(words)
     df.drop(features, axis=1, inplace=True)
     return df

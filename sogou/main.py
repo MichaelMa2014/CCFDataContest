@@ -8,9 +8,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
-import model.mnb
-import model.rf
+import model
 
 if __name__ == '__main__':
     model.mnb.run()
     model.rf.run()
+    model.svm.run()
+    model.lp.run()
