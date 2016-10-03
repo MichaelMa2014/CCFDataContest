@@ -65,11 +65,12 @@ def process(df, test=False):
     return df.join(pandas.DataFrame(sequences.tolist()))
 
 
-def build_train_set(label, validation_split=0.0):
+def build_train_set(label, validation_split=0.0, dummy=False):
     """
     处理训练集和验证集
     :param str|unicode label: 类别标签
     :param float validation_split: 验证集比例，如果为0.0则不返回验证集
+    :param bool dummy: 是否将类别转化成哑变量
     """
     global _train_df
     if _train_df is None:
@@ -79,7 +80,7 @@ def build_train_set(label, validation_split=0.0):
     # 去掉label未知的数据
     train_df = _train_df[_train_df[label] > 0].copy()
 
-    target = keras.utils.np_utils.to_categorical(train_df[label].values)
+    target = keras.utils.np_utils.to_categorical(train_df[label].values) if dummy else train_df[label].astype('category')
     train_df.drop(data.label_col, axis=1, inplace=True)
     print('train_df shape:', train_df.shape)
     print('target shape:', target.shape)

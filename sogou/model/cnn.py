@@ -67,7 +67,7 @@ def build(label, weights):
     :param str|unicode label: 类别标签
     :param weights:
     """
-    X_train, y_train, X_val, y_val = feature.wv.build_train_set(label, 0.1)
+    X_train, y_train, X_val, y_val = feature.wv.build_train_set(label, validation_split=0.1, dummy=True)
 
     clf = build_clf(X_train.shape[1], y_train.shape[1], weights=weights)
     clf.fit(X_train, y_train, batch_size=128, nb_epoch=10, validation_split=0.1, shuffle=True)

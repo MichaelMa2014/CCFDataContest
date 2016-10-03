@@ -20,7 +20,7 @@ def build(label):
     构建分类器
     :param str|unicode label: 类别标签
     """
-    X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, 0.1)
+    X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
 
     clf = sklearn.ensemble.RandomForestClassifier(n_estimators=300)
     clf.fit(X_train, y_train)

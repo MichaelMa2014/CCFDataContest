@@ -40,7 +40,7 @@ def build(label):
     构建分类器
     :param str|unicode label: 类别标签
     """
-    X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, 0.1)
+    X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1, dummy=True)
 
     clf = build_clf(X_train.shape[1], y_train.shape[1])
     clf.fit(X_train, y_train, batch_size=128, nb_epoch=20, validation_split=0.1, shuffle=True)
