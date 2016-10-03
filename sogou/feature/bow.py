@@ -8,6 +8,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
+import keras.utils.np_utils
 import pandas
 import sklearn.feature_extraction
 import sklearn.model_selection
