@@ -22,6 +22,8 @@ _tokenizer = None
 _train_df = None
 _test_df = None
 _test_id = None
+_word2vec = None
+_weights = None
 
 word_counts = None
 
@@ -80,7 +82,8 @@ def build_train_set(label, validation_split=0.0, dummy=False):
     # 去掉label未知的数据
     train_df = _train_df[_train_df[label] > 0].copy()
 
-    target = keras.utils.np_utils.to_categorical(train_df[label].values) if dummy else train_df[label].astype('category')
+    target = keras.utils.np_utils.to_categorical(train_df[label].values) if dummy else train_df[label].astype(
+        'category')
     train_df.drop(data.label_col, axis=1, inplace=True)
     print('train_df shape:', train_df.shape)
     print('target shape:', target.shape)
@@ -113,7 +116,7 @@ def flush():
     """
     清空缓存
     """
-    global _tokenizer, _train_df, _test_df, _test_id
+    global _tokenizer, _train_df, _test_df, _test_id, _word2vec, _weights, word_counts
     if _tokenizer is not None:
         _tokenizer = None
     if _train_df is not None:
@@ -122,6 +125,12 @@ def flush():
         _test_df = None
     if _test_id is not None:
         _test_id = None
+    if _word2vec is not None:
+        _word2vec = None
+    if _weights is not None:
+        _weights = None
+    if word_counts is not None:
+        word_counts = None
 
 
 def build_weights_matrix(word_vec_dim=300):
@@ -130,17 +139,20 @@ def build_weights_matrix(word_vec_dim=300):
     :param int word_vec_dim:
     :rtype: numpy.ndarray
     """
-    word2vec = build_word2vec_model(word_vec_dim)
+    global _word2vec, _weights, word_counts
+    if _weights is None:
+        if _word2vec is None:
+            _word2vec = build_word2vec_model(word_vec_dim)
 
-    global word_counts
-    weights = numpy.zeros((word_counts + 1, word_vec_dim))
-    for word, index in _tokenizer.word_index.items():
-        # if index <= max_features and word in word2vec.vocab:
-        #     weights[index, :] = word2vec[word]
-        if word in word2vec.vocab:
-            weights[index, :] = word2vec[word]
-        else:
-            weights[index, :] = numpy.random.uniform(-0.25, 0.25, word_vec_dim)
+        _weights = numpy.zeros((word_counts + 1, word_vec_dim))
+        for word, index in _tokenizer.word_index.items():
+            # if index <= word_counts and word in _word2vec.vocab:
+            #     _weights[index, :] = _word2vec[word]
+            if word in _word2vec.vocab:
+                _weights[index, :] = _word2vec[word]
+            else:
+                _weights[index, :] = numpy.random.uniform(-0.25, 0.25, word_vec_dim)
 
-    print('word2vec_weights shape:', weights.shape)
-    return weights
+        print('word2vec_weights shape:', _weights.shape)
+
+    return _weights

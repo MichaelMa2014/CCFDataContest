@@ -8,10 +8,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
-from conf import pynlpir
-
-# 临时目录配置
-TEMP_DIR = 'tmp'
+import conf.pynlpir
 
 # 编码配置
 ENCODING = 'gb18030'

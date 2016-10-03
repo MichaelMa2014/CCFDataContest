@@ -13,6 +13,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
+import os
+
 import keras
 import keras.utils.visualize_util
 
@@ -56,6 +58,9 @@ def build_clf(input_dim, output_dim, word_vec_dim=300, weights=None):
     clf = keras.models.Model(input_tensor, output_tensor)
     clf.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     print(clf.summary())
+
+    if not os.path.exists('img'):
+        os.mkdir('img')
     keras.utils.visualize_util.plot(clf, to_file='img/{file_name}.png'.format(file_name=__file__[:-3]),
                                     show_shapes=True)
     return clf
