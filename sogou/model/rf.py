@@ -8,10 +8,11 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
-import sklearn.svm
+import sklearn.ensemble
 
 import feature.bow
 import submissions
+import util
 
 
 def build(label):
@@ -21,7 +22,7 @@ def build(label):
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, 0.1)
 
-    clf = sklearn.svm.LinearSVC()
+    clf = sklearn.ensemble.RandomForestClassifier(n_estimators=300)
     clf.fit(X_train, y_train)
 
     val_result = clf.score(X_val, y_val)
@@ -31,6 +32,8 @@ def build(label):
 
 
 def run():
+    util.init_random()
+
     clf_age, val_age = build('age')
     clf_gender, val_gender = build('gender')
     clf_education, val_education = build('education')
@@ -44,4 +47,4 @@ def run():
     pred_gender = clf_gender.predict(X_test)
     pred_education = clf_education.predict(X_test)
 
-    submissions.save_csv(test_id, pred_age, pred_gender, pred_education, 'svm.csv')
+    submissions.save_csv(test_id, pred_age, pred_gender, pred_education, 'rf.csv')

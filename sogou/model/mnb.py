@@ -12,6 +12,7 @@ import sklearn.naive_bayes
 
 import feature.bow
 import submissions
+import util
 
 
 def build(label):
@@ -33,6 +34,8 @@ def build(label):
 
 
 def run():
+    util.init_random()
+
     clf_age, val_age = build('age')
     clf_gender, val_gender = build('gender')
     clf_education, val_education = build('education')
