@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 from __future__ import with_statement
 
 import model.cnn
+import model.mlp
 import model.mnb
 import model.rf
 import model.svm

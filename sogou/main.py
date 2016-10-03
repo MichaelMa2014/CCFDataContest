@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 from __future__ import with_statement
 
 import conf
+import feature
 import model
 
 if __name__ == '__main__':
@@ -18,4 +19,6 @@ if __name__ == '__main__':
     # model.rf.run()
     # model.svm.run()
 
+    model.mlp.run()
+    feature.flush()
     model.cnn.run()

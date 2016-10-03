@@ -13,6 +13,7 @@ import keras.preprocessing.text
 import keras.utils.np_utils
 import numpy
 import pandas
+import sklearn.model_selection
 
 import data
 import util
@@ -33,7 +34,7 @@ def build_word2vec_model(word_vec_dim=300):
     src_df = data.load_train_data()
     text_df = pandas.DataFrame({'query': sum(src_df['query'].values, [])})
     text_df = util.raw_to_texts(text_df, 'query')
-    print("text_df shape:", text_df.shape)
+    print('text_df shape:', text_df.shape)
 
     model = gensim.models.Word2Vec(text_df['query'], size=word_vec_dim, min_count=1, workers=1, seed=util.seed)
     model.init_sims(replace=False)
@@ -64,10 +65,11 @@ def process(df, test=False):
     return df.join(pandas.DataFrame(sequences.tolist()))
 
 
-def build_train_set(label):
+def build_train_set(label, validation_split=0.0):
     """
-    处理训练集
+    处理训练集和验证集
     :param str|unicode label: 类别标签
+    :param float validation_split: 验证集比例，如果为0.0则不返回验证集
     """
     global _train_df
     if _train_df is None:
@@ -79,10 +81,15 @@ def build_train_set(label):
 
     target = keras.utils.np_utils.to_categorical(train_df[label].values)
     train_df.drop(data.label_col, axis=1, inplace=True)
-    print("train_df shape:", train_df.shape)
-    print("target shape:", target.shape)
+    print('train_df shape:', train_df.shape)
+    print('target shape:', target.shape)
 
-    return train_df.values, target
+    if validation_split == 0.0:
+        return train_df.values, target
+    X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(train_df.values, target,
+                                                                              test_size=validation_split,
+                                                                              random_state=util.seed)
+    return X_train, y_train, X_val, y_val
 
 
 def build_test_set():
@@ -96,7 +103,7 @@ def build_test_set():
 
         _test_id = _test_df['id']
         _test_df.drop('id', axis=1, inplace=True)
-        print("test_df shape:", _test_df.shape)
+        print('test_df shape:', _test_df.shape)
 
     return _test_df.values, _test_id
 
@@ -134,5 +141,5 @@ def build_weights_matrix(word_vec_dim=300):
         else:
             weights[index, :] = numpy.random.uniform(-0.25, 0.25, word_vec_dim)
 
-    print("word2vec_weights shape:", weights.shape)
+    print('word2vec_weights shape:', weights.shape)
     return weights

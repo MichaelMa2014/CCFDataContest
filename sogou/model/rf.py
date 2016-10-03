@@ -10,7 +10,7 @@ from __future__ import with_statement
 
 import sklearn.ensemble
 
-import feature.bow
+import feature
 import submissions
 import util
 
@@ -25,21 +25,21 @@ def build(label):
     clf = sklearn.ensemble.RandomForestClassifier(n_estimators=300)
     clf.fit(X_train, y_train)
 
-    val_result = clf.score(X_val, y_val)
-    print(val_result)
+    val_acc = clf.score(X_val, y_val)
+    print('val_acc:', val_acc)
 
-    return clf, val_result
+    return clf, val_acc
 
 
 def run():
     util.init_random()
 
-    clf_age, val_age = build('age')
-    clf_gender, val_gender = build('gender')
-    clf_education, val_education = build('education')
+    clf_age, acc_age = build('age')
+    clf_gender, acc_gender = build('gender')
+    clf_education, acc_education = build('education')
 
-    val_final = (val_age + val_gender + val_education) / 3
-    print(val_final)
+    acc_final = (acc_age + acc_gender + acc_education) / 3
+    print('acc_final:', acc_final)
 
     X_test, test_id = feature.bow.build_test_set()
 
@@ -47,4 +47,5 @@ def run():
     pred_gender = clf_gender.predict(X_test)
     pred_education = clf_education.predict(X_test)
 
-    submissions.save_csv(test_id, pred_age, pred_gender, pred_education, 'rf.csv')
+    submissions.save_csv(test_id, pred_age, pred_gender, pred_education,
+                         '{file_name}.csv'.format(file_name=__file__[:-3]))

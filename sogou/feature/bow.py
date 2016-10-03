@@ -39,7 +39,7 @@ def process(df, test=False):
     else:
         assert _vectorizer is not None
         vec = _vectorizer.transform(df['query']).toarray()
-    print("tf-idf shape:", vec.shape)
+    print('tf-idf shape:', vec.shape)
 
     df.drop('query', axis=1, inplace=True)
     return df.join(pandas.DataFrame(vec))
@@ -72,11 +72,11 @@ def build_train_set(label, validation_split=0.0):
 
     target = train_df[label].astype('category')
     train_df.drop(data.label_col, axis=1, inplace=True)
-    print("train_df shape:", train_df.shape)
+    print('train_df shape:', train_df.shape)
 
     if validation_split == 0.0:
-        return train_df, target
-    X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(train_df, target,
+        return train_df.values, target
+    X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(train_df.values, target,
                                                                               test_size=validation_split,
                                                                               random_state=util.seed)
     return X_train, y_train, X_val, y_val
@@ -93,9 +93,9 @@ def build_test_set():
 
         _test_id = _test_df['id']
         _test_df.drop('id', axis=1, inplace=True)
-        print("test_df shape:", _test_df.shape)
+        print('test_df shape:', _test_df.shape)
 
-    return _test_df, _test_id
+    return _test_df.values, _test_id
 
 
 def flush():
