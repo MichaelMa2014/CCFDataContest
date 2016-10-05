@@ -55,12 +55,10 @@ def process(df, test=False):
     df = util.raw_to_texts(df, 'query')
 
     # 转化成序列矩阵
-    global _tokenizer, word_counts
+    global _tokenizer
     if not test:
         _tokenizer = keras.preprocessing.text.Tokenizer()
         _tokenizer.fit_on_texts(line.encode('utf-8') for line in df['query'])
-        if word_counts is None:
-            word_counts = len(_tokenizer.word_index)
 
     sequences = util.texts_to_sequences(df, 'query', _tokenizer, maxlen=2000)
     df.drop('query', axis=1, inplace=True)
@@ -143,6 +141,9 @@ def build_weights_matrix(word_vec_dim=300):
     if _weights is None:
         if _word2vec is None:
             _word2vec = build_word2vec_model(word_vec_dim)
+
+        if word_counts is None:
+            word_counts = len(_tokenizer.word_index)
 
         _weights = numpy.zeros((word_counts + 1, word_vec_dim))
         for word, index in _tokenizer.word_index.items():

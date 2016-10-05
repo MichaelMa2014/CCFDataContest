@@ -18,7 +18,6 @@ if __name__ == '__main__':
     # model.mnb.run()
     # model.rf.run()
     # model.svm.run()
-
-    model.mlp.run()
-    feature.flush()
+    #
+    # model.mlp.run()
     model.cnn.run()

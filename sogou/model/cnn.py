@@ -23,13 +23,14 @@ import submissions
 import util
 
 
-def build_clf(input_dim, output_dim, word_vec_dim=300, weights=None):
+def build_clf(input_dim, output_dim, word_vec_dim=300, weights=None, img_name=None):
     """
     构建神经网络
     :param input_dim: 输入维数
     :param output_dim: 输出维数
     :param word_vec_dim: 词向量维数
     :param weights: 词向量权重矩阵
+    :param img_name: 图片名称
     :rtype: keras.models.Model
     """
     if weights is not None:
@@ -59,22 +60,25 @@ def build_clf(input_dim, output_dim, word_vec_dim=300, weights=None):
     clf.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     print(clf.summary())
 
-    if not os.path.exists('img'):
-        os.mkdir('img')
-    keras.utils.visualize_util.plot(clf, to_file='img/{file_name}.png'.format(file_name=__file__[:-3]),
-                                    show_shapes=True)
+    if img_name:
+        if not os.path.exists('img'):
+            os.mkdir('img')
+        keras.utils.visualize_util.plot(clf, to_file=img_name, show_shapes=True)
     return clf
 
 
-def build(label, weights):
+def build(label):
     """
     构建分类器
     :param str|unicode label: 类别标签
-    :param weights:
     """
     X_train, y_train, X_val, y_val = feature.wv.build_train_set(label, validation_split=0.1, dummy=True)
 
-    clf = build_clf(X_train.shape[1], y_train.shape[1], weights=weights)
+    weights = feature.wv.build_weights_matrix(word_vec_dim=300)
+
+    clf = build_clf(X_train.shape[1], y_train.shape[1], weights=weights,
+                    img_name='img/{file_name}_{label}.png'.format(file_name=os.path.basename(__file__)[:-3],
+                                                                  label=label))
     clf.fit(X_train, y_train, batch_size=128, nb_epoch=10, validation_split=0.1, shuffle=True)
 
     val_loss, val_acc = clf.evaluate(X_val, y_val)
@@ -86,11 +90,9 @@ def build(label, weights):
 def run():
     util.init_random()
 
-    weights = feature.wv.build_weights_matrix(word_vec_dim=300)
-
-    clf_age, acc_age = build('age', weights)
-    clf_gender, acc_gender = build('gender', weights)
-    clf_education, acc_education = build('education', weights)
+    clf_age, acc_age = build('age')
+    clf_gender, acc_gender = build('gender')
+    clf_education, acc_education = build('education')
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)
@@ -102,4 +104,4 @@ def run():
     pred_education = clf_education.predict(X_test).argmax(axis=-1).flatten()
 
     submissions.save_csv(test_id, pred_age, pred_gender, pred_education,
-                         '{file_name}.csv'.format(file_name=__file__[:-3]))
+                         '{file_name}.csv'.format(file_name=os.path.basename(__file__)[:-3]))

@@ -8,6 +8,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
+import os
+
 import sklearn.naive_bayes
 
 import feature
@@ -50,4 +52,4 @@ def run():
     pred_education = clf_education.predict(X_test)
 
     submissions.save_csv(test_id, pred_age, pred_gender, pred_education,
-                         '{file_name}.csv'.format(file_name=__file__[:-3]))
+                         '{file_name}.csv'.format(file_name=os.path.basename(__file__)[:-3]))

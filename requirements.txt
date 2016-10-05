@@ -1,5 +1,4 @@
 gensim
-jieba
 keras
 nltk
 numpy

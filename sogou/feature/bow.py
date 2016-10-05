@@ -72,7 +72,8 @@ def build_train_set(label, validation_split=0.0, dummy=False):
     #         train_df_sample = train_df_sample.append(tmp_df)
     # train_df = train_df_sample.sample(frac=1, random_state=util.seed).reset_index(drop=True)
 
-    target = keras.utils.np_utils.to_categorical(train_df[label].values) if dummy else train_df[label].astype('category')
+    target = keras.utils.np_utils.to_categorical(train_df[label].values) if dummy else train_df[label].astype(
+        'category')
     train_df.drop(data.label_col, axis=1, inplace=True)
     print('train_df shape:', train_df.shape)
 
