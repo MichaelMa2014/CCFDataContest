@@ -25,13 +25,6 @@ stopwords = list(english_stopwords | chinese_stopwords | set(string.punctuation)
 # 字段名
 label_col = ['age', 'gender', 'education']
 
-# 每个字段的取值范围
-ranges = {
-    'age': range(7),
-    'gender': range(3),
-    'education': range(7)
-}
-
 
 def load_train_data():
     """

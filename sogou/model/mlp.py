@@ -38,15 +38,13 @@ def build_clf(input_dim, output_dim, img_name=None):
         if not os.path.exists('img'):
             os.mkdir('img')
         keras.utils.visualize_util.plot(clf, to_file=img_name, show_shapes=True)
-
     return clf
 
 
-def build(label, batch_size=512, nb_epoch=2):
+def build(label, nb_epoch=2):
     """
     构建分类器
     :param str|unicode label: 类别标签
-    :param int batch_size:
     :param int nb_epoch:
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1, dummy=True)
@@ -54,10 +52,10 @@ def build(label, batch_size=512, nb_epoch=2):
     clf = build_clf(X_train.shape[1], y_train.shape[1],
                     img_name='img/{file_name}_{label}.png'.format(file_name=os.path.basename(__file__)[:-3],
                                                                   label=label))
-    clf.fit(X_train, y_train, batch_size=batch_size, nb_epoch=nb_epoch, validation_split=0.1, shuffle=True)
+    history = clf.fit(X_train, y_train, batch_size=512, nb_epoch=nb_epoch, validation_data=(X_val, y_val), shuffle=True)
 
-    val_loss, val_acc = clf.evaluate(X_val, y_val)
-    print('val_loss: %f - val_acc: %f' % (val_loss, val_acc))
+    val_acc = history.history['val_acc'][-1]
+    print('val_acc:', val_acc)
 
     return clf, val_acc
 

@@ -9,15 +9,16 @@ from __future__ import unicode_literals
 from __future__ import with_statement
 
 import conf
-import feature
 import model
 
 if __name__ == '__main__':
     conf.pynlpir.init()
 
+    # model.lr.run()
     # model.mnb.run()
-    # model.rf.run()
+    model.rf.run()
     # model.svm.run()
-    #
+    # model.xgb.run()
+
     # model.mlp.run()
-    model.cnn.run()
+    # model.cnn.run()

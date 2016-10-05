@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 References:
-Sequential Short-Text Classification with Recurrent and Convolutional Neural Networks
-http://arxiv.org/pdf/1603.03827v1.pdf
+Convolutional Neural Networks for Sentence Classification
+http://arxiv.org/pdf/1408.5882v2.pdf
 """
 
 from __future__ import absolute_import
@@ -31,27 +31,30 @@ def build_clf(input_dim, output_dim, word_vec_dim=300, weights=None, img_name=No
     :param word_vec_dim: 词向量维数
     :param weights: 词向量权重矩阵
     :param img_name: 图片名称
-    :rtype: keras.models.Sequential
+    :rtype: keras.models.Model
     """
     if weights is not None:
         assert (feature.wv.word_counts + 1, word_vec_dim) == weights.shape
         weights = [weights]
 
-    clf = keras.models.Sequential()
-    clf.add(keras.layers.Embedding(input_dim=feature.wv.word_counts + 1,
-                                   output_dim=word_vec_dim, input_length=input_dim,
-                                   weights=weights))
+    input_tensor = keras.layers.Input(shape=(input_dim,), dtype='int32')
 
-    filter_length = 3
-    clf.add(keras.layers.Convolution1D(nb_filter=200, filter_length=filter_length, activation='relu'))
-    clf.add(keras.layers.MaxPooling1D(pool_length=input_dim - filter_length + 1))
-    clf.add(keras.layers.Flatten())
+    embedded = keras.layers.Embedding(input_dim=feature.wv.word_counts + 1,
+                                      output_dim=word_vec_dim, input_length=input_dim,
+                                      weights=weights)(input_tensor)
 
-    clf.add(keras.layers.Dropout(0.5))
-    clf.add(keras.layers.Dense(128, activation='relu'))
-    clf.add(keras.layers.Dropout(0.5))
-    clf.add(keras.layers.Dense(output_dim, activation='softmax'))
+    tensors = []
+    for filter_length in (3, 4, 5):
+        tensor = keras.layers.Convolution1D(nb_filter=100, filter_length=filter_length, activation='relu')(embedded)
+        tensor = keras.layers.MaxPooling1D(pool_length=input_dim - filter_length + 1)(tensor)
+        tensor = keras.layers.Flatten()(tensor)
+        tensors.append(tensor)
 
+    output_tensor = keras.layers.merge(tensors, mode='concat', concat_axis=1)
+    output_tensor = keras.layers.Dropout(0.5)(output_tensor)
+    output_tensor = keras.layers.Dense(output_dim, activation='softmax')(output_tensor)
+
+    clf = keras.models.Model(input_tensor, output_tensor)
     clf.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     print(clf.summary())
 
@@ -94,9 +97,9 @@ def run():
 
     X_test, test_id = feature.wv.build_test_set()
 
-    pred_age = clf_age.predict(X_test).flatten()
-    pred_gender = clf_gender.predict(X_test).flatten()
-    pred_education = clf_education.predict(X_test).flatten()
+    pred_age = clf_age.predict(X_test).argmax(axis=-1).flatten()
+    pred_gender = clf_gender.predict(X_test).argmax(axis=-1).flatten()
+    pred_education = clf_education.predict(X_test).argmax(axis=-1).flatten()
 
     submissions.save_csv(test_id, pred_age, pred_gender, pred_education,
                          '{file_name}.csv'.format(file_name=os.path.basename(__file__)[:-3]))

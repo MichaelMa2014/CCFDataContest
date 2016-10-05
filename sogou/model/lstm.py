@@ -42,9 +42,8 @@ def build_clf(input_dim, output_dim, word_vec_dim=300, weights=None, img_name=No
                                    output_dim=word_vec_dim, input_length=input_dim,
                                    weights=weights))
 
-    filter_length = 3
-    clf.add(keras.layers.Convolution1D(nb_filter=200, filter_length=filter_length, activation='relu'))
-    clf.add(keras.layers.MaxPooling1D(pool_length=input_dim - filter_length + 1))
+    clf.add(keras.layers.Bidirectional(keras.layers.LSTM(output_dim=100, return_sequences=True)))
+    clf.add(keras.layers.MaxPooling1D(pool_length=input_dim))
     clf.add(keras.layers.Flatten())
 
     clf.add(keras.layers.Dropout(0.5))

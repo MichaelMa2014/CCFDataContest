@@ -8,8 +8,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
-import model.cnn
-import model.mlp
+import model.lr
 import model.mnb
 import model.rf
 import model.svm
+import model.xgb
+
+import model.cnn
+import model.lstm
+import model.mlp
+import model.text_cnn

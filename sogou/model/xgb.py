@@ -10,7 +10,7 @@ from __future__ import with_statement
 
 import os
 
-import sklearn.svm
+import xgboost
 
 import feature
 import submissions
@@ -24,7 +24,7 @@ def build(label):
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
 
-    clf = sklearn.svm.LinearSVC(random_state=util.seed)
+    clf = xgboost.XGBClassifier(seed=util.seed)
     clf.fit(X_train, y_train)
 
     val_acc = clf.score(X_val, y_val)

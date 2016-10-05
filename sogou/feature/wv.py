@@ -148,11 +148,11 @@ def build_weights_matrix(word_vec_dim=300):
         _weights = numpy.zeros((word_counts + 1, word_vec_dim))
         for word, index in _tokenizer.word_index.items():
             # if index <= word_counts and word in _word2vec.vocab:
-            #     _weights[index, :] = _word2vec[word]
+            #     _weights[index] = _word2vec[word]
             if word in _word2vec.vocab:
-                _weights[index, :] = _word2vec[word]
+                _weights[index] = _word2vec[word]
             else:
-                _weights[index, :] = numpy.random.uniform(-0.25, 0.25, word_vec_dim)
+                _weights[index] = numpy.random.uniform(-0.25, 0.25, word_vec_dim)
 
         print('word2vec_weights shape:', _weights.shape)
 
