@@ -8,42 +8,55 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
+import os
+
 import keras.utils.np_utils
 import pandas
+import sklearn.externals.joblib
 import sklearn.feature_extraction
 import sklearn.model_selection
 
 import data
 import util
 
-_vectorizer = None
-_train_df = None
-_test_df = None
-_test_id = None
+_file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 
-def process(df, test=False):
+def build_vectorizer(df=None):
+    """
+    :param pandas.DataFrame df:
+    :retype: sklearn.feature_extraction.text.TfidfVectorizer
+    """
+    if not os.path.exists('temp'):
+        os.mkdir('temp')
+    path = os.path.abspath('temp/{file_name}_vectorizer.model'.format(file_name=_file_name))
+    if os.path.exists(path):
+        vectorizer = sklearn.externals.joblib.load(path)
+    else:
+        if df is None:
+            df = data.load_train_data()
+            df = data.process_data(df)
+
+        vectorizer = sklearn.feature_extraction.text.TfidfVectorizer(stop_words=data.stopwords, max_features=8000)
+        vectorizer.fit(df['query'])
+        sklearn.externals.joblib.dump(vectorizer, path)
+
+    return vectorizer
+
+
+def transform(df):
     """
     文本处理部分
     :param pandas.DataFrame df:
-    :param bool test:
     :rtype: pandas.DataFrame
     """
-    df.loc[:, 'query'] = df.loc[:, 'query'].map(lambda l: ' '.join(l))
-    df = util.raw_to_texts(df, 'query')
-
     # 转化成词频向量
-    global _vectorizer
-    if not test:
-        _vectorizer = sklearn.feature_extraction.text.TfidfVectorizer(stop_words=data.stopwords, max_features=8000)
-        vec = _vectorizer.fit_transform(df['query']).toarray()
-    else:
-        assert _vectorizer is not None
-        vec = _vectorizer.transform(df['query']).toarray()
-    print('tf-idf shape:', vec.shape)
+    vectorizer = build_vectorizer(df)
+    vectors = vectorizer.transform(df['query']).toarray()
+    print('tf-idf vectors shape:', vectors.shape)
 
     df.drop('query', axis=1, inplace=True)
-    return df.join(pandas.DataFrame(vec))
+    return df.join(pandas.DataFrame(vectors))
 
 
 def build_train_set(label, validation_split=0.0, dummy=False):
@@ -53,13 +66,19 @@ def build_train_set(label, validation_split=0.0, dummy=False):
     :param float validation_split: 验证集比例，如果为0.0则不返回验证集
     :param bool dummy: 是否将类别转化成哑变量
     """
-    global _train_df
-    if _train_df is None:
-        _train_df = data.load_train_data()
-        _train_df = process(_train_df)
+    if not os.path.exists('temp'):
+        os.mkdir('temp')
+    path = os.path.abspath('temp/{file_name}_train_df.hdf'.format(file_name=_file_name))
+    if os.path.exists(path):
+        train_df = pandas.read_hdf(path)
+    else:
+        train_df = data.load_train_data()
+        train_df = data.process_data(train_df)
+        train_df = transform(train_df)
+        train_df.to_hdf(path, 'train_df')
 
     # 去掉label未知的数据
-    train_df = _train_df[_train_df[label] > 0].copy()
+    train_df = train_df[train_df[label] > 0]
 
     # # 每种样本不重复抽取至多sample_num个并随机打乱
     # sample_num = 1000
@@ -89,28 +108,19 @@ def build_test_set():
     """
     处理测试集
     """
-    global _test_df, _test_id
-    if _test_df is None or _test_id is None:
-        _test_df = data.load_test_data()
-        _test_df = process(_test_df, test=True)
+    if not os.path.exists('temp'):
+        os.mkdir('temp')
+    path = os.path.abspath('temp/{file_name}_test_df.hdf'.format(file_name=_file_name))
+    if os.path.exists(path):
+        test_df = pandas.read_hdf(path)
+    else:
+        test_df = data.load_test_data()
+        test_df = data.process_data(test_df)
+        test_df = transform(test_df)
+        test_df.to_hdf(path, 'train_df')
 
-        _test_id = _test_df['id']
-        _test_df.drop('id', axis=1, inplace=True)
-        print('test_df shape:', _test_df.shape)
+    test_id = test_df['id']
+    test_df.drop('id', axis=1, inplace=True)
+    print('test_df shape:', test_df.shape)
 
-    return _test_df.values, _test_id
-
-
-def flush():
-    """
-    清空缓存
-    """
-    global _vectorizer, _train_df, _test_df, _test_id
-    if _vectorizer is not None:
-        _vectorizer = None
-    if _train_df is not None:
-        _train_df = None
-    if _test_df is not None:
-        _test_df = None
-    if _test_id is not None:
-        _test_id = None
+    return test_df.values, test_id

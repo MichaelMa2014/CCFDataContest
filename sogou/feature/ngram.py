@@ -10,7 +10,6 @@ from __future__ import with_statement
 
 import os
 
-import gensim
 import keras.preprocessing.sequence
 import keras.preprocessing.text
 import keras.utils.np_utils
@@ -23,6 +22,8 @@ import data
 import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
+
+max_feature = None  # TODO
 
 
 def build_tokenizer(df=None):
@@ -47,38 +48,107 @@ def build_tokenizer(df=None):
     return tokenizer
 
 
-def transform(df):
+def build_ngram_set(sequence, ngram):
+    """
+    Extract a set of n-grams from a list of integers.
+    >>> build_ngram_set([1, 4, 9, 4, 1, 4], ngram=2)
+    {(4, 9), (4, 1), (1, 4), (9, 4)}
+    >>> build_ngram_set([1, 4, 9, 4, 1, 4], ngram=3)
+    {(1, 4, 9), (4, 9, 4), (9, 4, 1), (4, 1, 4)}
+    :param list sequence:
+    :param int ngram:
+    :rtype: set
+    """
+    return set(zip(*[sequence[i:] for i in range(ngram)]))
+
+
+def add_ngram(sequences, token_indice, ngram):
+    """
+    Augment the input list of list (sequences) by appending n-grams values.
+
+    Example: adding bi-gram
+    >>> sequences = [[1, 3, 4, 5], [1, 3, 7, 9, 2]]
+    >>> token_indice = {(1, 3): 1337, (9, 2): 42, (4, 5): 2017}
+    >>> add_ngram(sequences, token_indice, ngram=2)
+    [[1, 3, 4, 5, 1337, 2017], [1, 3, 7, 9, 2, 1337, 42]]
+
+    Example: adding tri-gram
+    >>> sequences = [[1, 3, 4, 5], [1, 3, 7, 9, 2]]
+    >>> token_indice = {(1, 3): 1337, (9, 2): 42, (4, 5): 2017, (7, 9, 2): 2018}
+    >>> add_ngram(sequences, token_indice, ngram=3)
+    [[1, 3, 4, 5, 1337], [1, 3, 7, 9, 2, 1337, 2018]]
+    :param list sequences:
+    :param dict token_indice:
+    :param int ngram:
+    :rtype: list
+    """
+    for seq in sequences:
+        for i in range(len(seq) - ngram + 1):
+            for n in range(2, ngram + 1):
+                token = tuple(seq[i:i + n])
+                if token in token_indice:
+                    seq.append(token_indice[token])
+    return sequences
+
+
+def build_ngram_sequences(sequences, ngram):
+    """
+    :param list sequences:
+    :param int ngram:
+    :rtype: list
+    """
+    if ngram > 1:
+        ngram_set = set()
+        for seq in sequences:
+            for n in range(2, ngram + 1):
+                ngram_set.update(build_ngram_set(seq, ngram=n))
+
+        tokenizer = build_tokenizer()
+        word_counts = numpy.max(tokenizer.word_index.values())
+
+        token_indice = {v: k for k, v in enumerate(ngram_set, start=word_counts + 1)}
+        sequences = add_ngram(sequences, token_indice, ngram)
+
+        global max_feature
+        max_feature = numpy.max(token_indice.values())
+    return sequences
+
+
+def transform(df, ngram):
     """
     文本处理部分
     :param pandas.DataFrame df:
+    :param int ngram:
     :rtype: pandas.DataFrame
     """
     # 转化成序列矩阵
     tokenizer = build_tokenizer(df)
     sequences = tokenizer.texts_to_sequences(line.encode('utf-8') for line in df['query'].values)
-    sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=2000, padding='post', truncating='post')
+    sequences = build_ngram_sequences(sequences, ngram)
+    sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=3000, padding='post', truncating='post')
     print('sequences shape:', sequences.shape)
 
     df.drop('query', axis=1, inplace=True)
     return df.join(pandas.DataFrame(sequences.tolist()))
 
 
-def build_train_set(label, validation_split=0.0, dummy=False):
+def build_train_set(label, ngram, validation_split=0.0, dummy=False):
     """
     处理训练集和验证集
     :param str|unicode label: 类别标签
+    :param int ngram:
     :param float validation_split: 验证集比例，如果为0.0则不返回验证集
     :param bool dummy: 是否将类别转化成哑变量
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_train_df.hdf'.format(file_name=_file_name))
+    path = os.path.abspath('temp/{file_name}_train_df_range{ngram}.hdf'.format(file_name=_file_name, ngram=ngram))
     if os.path.exists(path):
         train_df = pandas.read_hdf(path)
     else:
         train_df = data.load_train_data()
         train_df = data.process_data(train_df)
-        train_df = transform(train_df)
+        train_df = transform(train_df, ngram)
         train_df.to_hdf(path, 'train_df')
 
     # 去掉label未知的数据
@@ -98,19 +168,20 @@ def build_train_set(label, validation_split=0.0, dummy=False):
     return X_train, y_train, X_val, y_val
 
 
-def build_test_set():
+def build_test_set(ngram):
     """
     处理测试集
+    :param int ngram:
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_test_df.hdf'.format(file_name=_file_name))
+    path = os.path.abspath('temp/{file_name}_test_df_range{ngram}.hdf'.format(file_name=_file_name, ngram=ngram))
     if os.path.exists(path):
         test_df = pandas.read_hdf(path)
     else:
         test_df = data.load_test_data()
         test_df = data.process_data(test_df)
-        test_df = transform(test_df)
+        test_df = transform(test_df, ngram)
         test_df.to_hdf(path, 'train_df')
 
     test_id = test_df['id']
@@ -118,61 +189,3 @@ def build_test_set():
     print('test_df shape:', test_df.shape)
 
     return test_df.values, test_id
-
-
-def build_word2vec_model(word_vec_dim):
-    """
-    :param int word_vec_dim:
-    :rtype: gensim.models.Word2Vec
-    """
-    if not os.path.exists('temp'):
-        os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_word2vec_dim{dim}.model'.format(file_name=_file_name, dim=word_vec_dim))
-    if os.path.exists(path):
-        model = gensim.models.Word2Vec.load(path)
-    else:
-        src_df = data.load_train_data()
-        text_df = pandas.DataFrame({'query': sum(src_df['query'].values, [])})
-        text_df = util.raw_to_texts(text_df, 'query')
-        print('text_df shape:', text_df.shape)
-
-        model = gensim.models.Word2Vec(text_df['query'], size=word_vec_dim, min_count=1, workers=1, seed=util.seed)
-        model.init_sims(replace=False)
-        model.save(path)
-
-    return model
-
-
-def build_weights_matrix(word_vec_dim=300):
-    """
-    根据词向量构建初始化权重矩阵
-    :param int word_vec_dim:
-    :rtype: numpy.ndarray
-    """
-    if not os.path.exists('temp'):
-        os.mkdir('temp')
-    path = os.path.abspath(
-        'temp/{file_name}_weights_dim{dim}.npy'.format(file_name=_file_name, dim=word_vec_dim))
-    if os.path.exists(path):
-        weights = numpy.load(path)
-    else:
-        word2vec = build_word2vec_model(word_vec_dim)
-
-        tokenizer = build_tokenizer()
-
-        weights = numpy.zeros((get_max_feature() + 1, word_vec_dim))
-        for word, index in tokenizer.word_index.items():
-            if word in word2vec.vocab:
-                weights[index] = word2vec[word]
-            else:
-                weights[index] = numpy.random.uniform(-0.25, 0.25, word_vec_dim)
-
-        print('word2vec_weights shape:', weights.shape)
-        numpy.save(path, weights)
-
-    return weights
-
-
-def get_max_feature():
-    tokenizer = build_tokenizer()
-    return numpy.max(tokenizer.word_index.values())

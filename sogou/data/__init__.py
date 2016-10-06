@@ -15,6 +15,7 @@ import nltk
 import pandas
 
 import conf
+import util
 
 # 加载nltk.corpus.stopwords停用词
 english_stopwords = set(nltk.corpus.stopwords.words('english'))
@@ -30,15 +31,13 @@ def load_train_data():
     """
     读入训练集数据
     """
-    # train_id = []
     train_age = []
     train_gender = []
     train_education = []
     train_query = []
-    with codecs.open('./data/user_tag_query.2W.TRAIN', encoding=conf.ENCODING) as train_f:
-        for line in train_f:
+    with codecs.open('./data/user_tag_query.2W.TRAIN', encoding=conf.ENCODING) as train_file:
+        for line in train_file:
             array = line.split('\t')
-            # train_id.append(array[0])
             train_age.append(int(array[1]))
             train_gender.append(int(array[2]))
             train_education.append(int(array[3]))
@@ -53,9 +52,19 @@ def load_test_data():
     """
     test_id = []
     test_query = []
-    with codecs.open('./data/user_tag_query.2W.TEST', encoding=conf.ENCODING) as test_f:
-        for line in test_f:
+    with codecs.open('./data/user_tag_query.2W.TEST', encoding=conf.ENCODING) as test_file:
+        for line in test_file:
             array = line.split('\t')
             test_id.append(array[0])
             test_query.append(array[1:])
     return pandas.DataFrame({'id': test_id, 'query': test_query})
+
+
+def process_data(df):
+    """
+    :param pandas.DataFrame df:
+    :rtype: pandas.DataFrame
+    """
+    df['query'] = df['query'].map(lambda l: ' '.join(l))
+    df = util.raw_to_texts(df, 'query')
+    return df

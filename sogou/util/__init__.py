@@ -67,23 +67,14 @@ def raw_to_words(df, feature, stopwords=None, dictionary=None):
     return df
 
 
-def raw_to_texts(df, feature, stopwords=None):
+def raw_to_texts(df, feature, stopwords=None, dictionary=None):
     """
-    :param df:
-    :param feature:
-    :param stopwords:
-    :return:
+    :param pandas.DataFrame df:
+    :param str|unicode feature:
+    :param tuple|list|set|dict stopwords:
+    :param tuple|list|set|dict dictionary:
+    :rtype: pandas.DataFrame
     """
-    df = raw_to_words(df, feature, stopwords)
+    df = raw_to_words(df, feature, stopwords, dictionary)
     df[feature] = df[feature].map(lambda wl: ' '.join(wl))
     return df
-
-
-def texts_to_sequences(df, column, tokenizer, maxlen=300):
-    seq = tokenizer.texts_to_sequences(line.encode('utf-8') for line in df[column].values)
-    print('mean:', numpy.mean([len(x) for x in seq]))
-    print('std:', numpy.std([len(x) for x in seq]))
-    print('median:', numpy.median([len(x) for x in seq]))
-    print('max:', numpy.max([len(x) for x in seq]))
-    seq = keras.preprocessing.sequence.pad_sequences(seq, maxlen=maxlen, padding='post', truncating='post')
-    return seq

@@ -9,9 +9,5 @@ from __future__ import unicode_literals
 from __future__ import with_statement
 
 import feature.bow
+import feature.ngram
 import feature.wv
-
-
-def flush():
-    feature.bow.flush()
-    feature.wv.flush()

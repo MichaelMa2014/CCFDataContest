@@ -2,7 +2,7 @@
 """
 References:
 Sequential Short-Text Classification with Recurrent and Convolutional Neural Networks
-http://arxiv.org/pdf/1603.03827v1.pdf
+https://arxiv.org/abs/1603.03827
 """
 
 from __future__ import absolute_import
@@ -22,32 +22,28 @@ import feature
 import submissions
 import util
 
+_file_name = os.path.splitext(os.path.basename(__file__))[0]
 
-def build_clf(input_dim, output_dim, word_vec_dim=300, weights=None, img_name=None):
+
+def build_clf(input_dim, output_dim, word_vec_dim=300, img_name=None):
     """
     构建神经网络
-    :param input_dim: 输入维数
-    :param output_dim: 输出维数
-    :param word_vec_dim: 词向量维数
-    :param weights: 词向量权重矩阵
-    :param img_name: 图片名称
+    :param int input_dim: 输入维数
+    :param int output_dim: 输出维数
+    :param int word_vec_dim: 词向量维数
+    :param str|unicode img_name: 图片名称
     :rtype: keras.models.Sequential
     """
-    if weights is not None:
-        assert (feature.wv.word_counts + 1, word_vec_dim) == weights.shape
-        weights = [weights]
+    weights = feature.wv.build_weights_matrix(word_vec_dim=300)
 
     clf = keras.models.Sequential()
-    clf.add(keras.layers.Embedding(input_dim=feature.wv.word_counts + 1,
-                                   output_dim=word_vec_dim, input_length=input_dim,
-                                   weights=weights))
+    clf.add(keras.layers.Embedding(input_dim=feature.wv.get_max_feature() + 1, output_dim=word_vec_dim,
+                                   input_length=input_dim, weights=[weights]))
 
-    filter_length = 3
-    clf.add(keras.layers.Convolution1D(nb_filter=200, filter_length=filter_length, activation='relu'))
-    clf.add(keras.layers.MaxPooling1D(pool_length=input_dim - filter_length + 1))
-    clf.add(keras.layers.Flatten())
-
+    clf.add(keras.layers.Convolution1D(nb_filter=200, filter_length=3, activation='relu'))
+    clf.add(keras.layers.GlobalMaxPooling1D())
     clf.add(keras.layers.Dropout(0.5))
+
     clf.add(keras.layers.Dense(128, activation='relu'))
     clf.add(keras.layers.Dropout(0.5))
     clf.add(keras.layers.Dense(output_dim, activation='softmax'))
@@ -56,25 +52,23 @@ def build_clf(input_dim, output_dim, word_vec_dim=300, weights=None, img_name=No
     print(clf.summary())
 
     if img_name:
-        if not os.path.exists('img'):
-            os.mkdir('img')
+        if not os.path.exists('image'):
+            os.mkdir('image')
         keras.utils.visualize_util.plot(clf, to_file=img_name, show_shapes=True)
     return clf
 
 
-def build(label):
+def build(label, nb_epoch=7):
     """
     构建分类器
     :param str|unicode label: 类别标签
+    :param int nb_epoch:
     """
     X_train, y_train, X_val, y_val = feature.wv.build_train_set(label, validation_split=0.1, dummy=True)
 
-    weights = feature.wv.build_weights_matrix(word_vec_dim=300)
-
-    clf = build_clf(X_train.shape[1], y_train.shape[1], weights=weights,
-                    img_name='img/{file_name}_{label}.png'.format(file_name=os.path.basename(__file__)[:-3],
-                                                                  label=label))
-    history = clf.fit(X_train, y_train, batch_size=128, nb_epoch=7, validation_data=(X_val, y_val), shuffle=True)
+    clf = build_clf(X_train.shape[1], y_train.shape[1],
+                    img_name='image/{file_name}_{label}.png'.format(file_name=_file_name, label=label))
+    history = clf.fit(X_train, y_train, batch_size=128, nb_epoch=nb_epoch, validation_data=(X_val, y_val), shuffle=True)
 
     val_acc = history.history['val_acc'][-1]
     print('val_acc:', val_acc)
@@ -85,7 +79,7 @@ def build(label):
 def run():
     util.init_random()
 
-    clf_age, acc_age = build('age')
+    clf_age, acc_age = build('age', nb_epoch=8)
     clf_gender, acc_gender = build('gender')
     clf_education, acc_education = build('education')
 
@@ -94,9 +88,8 @@ def run():
 
     X_test, test_id = feature.wv.build_test_set()
 
-    pred_age = clf_age.predict(X_test).flatten()
-    pred_gender = clf_gender.predict(X_test).flatten()
-    pred_education = clf_education.predict(X_test).flatten()
+    pred_age = clf_age.predict_classes(X_test).flatten()
+    pred_gender = clf_gender.predict_classes(X_test).flatten()
+    pred_education = clf_education.predict_classes(X_test).flatten()
 
-    submissions.save_csv(test_id, pred_age, pred_gender, pred_education,
-                         '{file_name}.csv'.format(file_name=os.path.basename(__file__)[:-3]))
+    submissions.save_csv(test_id, pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))

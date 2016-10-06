@@ -15,6 +15,7 @@ import model.svm
 import model.xgb
 
 import model.cnn
+import model.fast_text
 import model.lstm
 import model.mlp
 import model.text_cnn

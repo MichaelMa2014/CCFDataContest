@@ -16,6 +16,8 @@ import feature
 import submissions
 import util
 
+_file_name = os.path.splitext(os.path.basename(__file__))[0]
+
 
 def build(label):
     """
@@ -49,5 +51,4 @@ def run():
     pred_gender = clf_gender.predict(X_test)
     pred_education = clf_education.predict(X_test)
 
-    submissions.save_csv(test_id, pred_age, pred_gender, pred_education,
-                         '{file_name}.csv'.format(file_name=os.path.basename(__file__)[:-3]))
+    submissions.save_csv(test_id, pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))
