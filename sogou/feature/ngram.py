@@ -11,49 +11,24 @@ from __future__ import with_statement
 import os
 
 import keras.preprocessing.sequence
-import keras.preprocessing.text
 import keras.utils.np_utils
 import numpy
 import pandas
-import sklearn.externals.joblib
 import sklearn.model_selection
 
 import data
+import feature
 import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
 
-max_feature = None  # TODO
 
-
-def build_tokenizer(df=None):
-    """
-    :param pandas.DataFrame df:
-    :rtype: keras.preprocessing.text.Tokenizer
-    """
-    if not os.path.exists('temp'):
-        os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_tokenizer.model'.format(file_name=_file_name))
-    if os.path.exists(path):
-        tokenizer = sklearn.externals.joblib.load(path)
-    else:
-        if df is None:
-            df = data.load_train_data()
-            df = data.process_data(df)
-
-        tokenizer = keras.preprocessing.text.Tokenizer()
-        tokenizer.fit_on_texts(line.encode('utf-8') for line in df['query'])
-        sklearn.externals.joblib.dump(tokenizer, path)
-
-    return tokenizer
-
-
-def build_ngram_set(sequence, ngram):
+def _build_ngram_set(sequence, ngram):
     """
     Extract a set of n-grams from a list of integers.
-    >>> build_ngram_set([1, 4, 9, 4, 1, 4], ngram=2)
+    >>> _build_ngram_set([1, 4, 9, 4, 1, 4], ngram=2)
     {(4, 9), (4, 1), (1, 4), (9, 4)}
-    >>> build_ngram_set([1, 4, 9, 4, 1, 4], ngram=3)
+    >>> _build_ngram_set([1, 4, 9, 4, 1, 4], ngram=3)
     {(1, 4, 9), (4, 9, 4), (9, 4, 1), (4, 1, 4)}
     :param list sequence:
     :param int ngram:
@@ -62,20 +37,20 @@ def build_ngram_set(sequence, ngram):
     return set(zip(*[sequence[i:] for i in range(ngram)]))
 
 
-def add_ngram(sequences, token_indice, ngram):
+def _add_ngram(sequences, token_indice, ngram):
     """
     Augment the input list of list (sequences) by appending n-grams values.
 
     Example: adding bi-gram
     >>> sequences = [[1, 3, 4, 5], [1, 3, 7, 9, 2]]
     >>> token_indice = {(1, 3): 1337, (9, 2): 42, (4, 5): 2017}
-    >>> add_ngram(sequences, token_indice, ngram=2)
+    >>> _add_ngram(sequences, token_indice, ngram=2)
     [[1, 3, 4, 5, 1337, 2017], [1, 3, 7, 9, 2, 1337, 42]]
 
     Example: adding tri-gram
     >>> sequences = [[1, 3, 4, 5], [1, 3, 7, 9, 2]]
     >>> token_indice = {(1, 3): 1337, (9, 2): 42, (4, 5): 2017, (7, 9, 2): 2018}
-    >>> add_ngram(sequences, token_indice, ngram=3)
+    >>> _add_ngram(sequences, token_indice, ngram=3)
     [[1, 3, 4, 5, 1337], [1, 3, 7, 9, 2, 1337, 2018]]
     :param list sequences:
     :param dict token_indice:
@@ -91,7 +66,7 @@ def add_ngram(sequences, token_indice, ngram):
     return sequences
 
 
-def build_ngram_sequences(sequences, ngram):
+def _build_ngram_sequences(sequences, ngram):
     """
     :param list sequences:
     :param int ngram:
@@ -101,31 +76,28 @@ def build_ngram_sequences(sequences, ngram):
         ngram_set = set()
         for seq in sequences:
             for n in range(2, ngram + 1):
-                ngram_set.update(build_ngram_set(seq, ngram=n))
+                ngram_set.update(_build_ngram_set(seq, ngram=n))
 
-        tokenizer = build_tokenizer()
-        word_counts = numpy.max(tokenizer.word_index.values())
+        tokenizer = feature.build_tokenizer()
+        max_feature = numpy.max(tokenizer.word_index.values())
 
-        token_indice = {v: k for k, v in enumerate(ngram_set, start=word_counts + 1)}
-        sequences = add_ngram(sequences, token_indice, ngram)
+        token_indice = {v: k for k, v in enumerate(ngram_set, start=max_feature + 1)}
+        sequences = _add_ngram(sequences, token_indice, ngram)
 
-        global max_feature
-        max_feature = numpy.max(token_indice.values())
     return sequences
 
 
 def transform(df, ngram):
     """
-    文本处理部分
+    转化成序列矩阵
     :param pandas.DataFrame df:
     :param int ngram:
     :rtype: pandas.DataFrame
     """
-    # 转化成序列矩阵
-    tokenizer = build_tokenizer(df)
+    tokenizer = feature.build_tokenizer(df)
     sequences = tokenizer.texts_to_sequences(line.encode('utf-8') for line in df['query'].values)
-    sequences = build_ngram_sequences(sequences, ngram)
-    sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=3000, padding='post', truncating='post')
+    sequences = _build_ngram_sequences(sequences, ngram)
+    sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=2000, padding='post', truncating='post')
     print('sequences shape:', sequences.shape)
 
     df.drop('query', axis=1, inplace=True)
@@ -142,7 +114,7 @@ def build_train_set(label, ngram, validation_split=0.0, dummy=False):
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_train_df_range{ngram}.hdf'.format(file_name=_file_name, ngram=ngram))
+    path = os.path.abspath('temp/{file_name}_train_df_ngram{ngram}.hdf'.format(file_name=_file_name, ngram=ngram))
     if os.path.exists(path):
         train_df = pandas.read_hdf(path)
     else:
@@ -150,6 +122,8 @@ def build_train_set(label, ngram, validation_split=0.0, dummy=False):
         train_df = data.process_data(train_df)
         train_df = transform(train_df, ngram)
         train_df.to_hdf(path, 'train_df')
+
+    max_feature = train_df.max().max()
 
     # 去掉label未知的数据
     train_df = train_df[train_df[label] > 0]
@@ -165,7 +139,7 @@ def build_train_set(label, ngram, validation_split=0.0, dummy=False):
     X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(train_df.values, target,
                                                                               test_size=validation_split,
                                                                               random_state=util.seed)
-    return X_train, y_train, X_val, y_val
+    return X_train, y_train, X_val, y_val, max_feature
 
 
 def build_test_set(ngram):
@@ -175,7 +149,7 @@ def build_test_set(ngram):
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_test_df_range{ngram}.hdf'.format(file_name=_file_name, ngram=ngram))
+    path = os.path.abspath('temp/{file_name}_test_df_ngram{ngram}.hdf'.format(file_name=_file_name, ngram=ngram))
     if os.path.exists(path):
         test_df = pandas.read_hdf(path)
     else:

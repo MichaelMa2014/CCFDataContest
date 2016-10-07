@@ -12,7 +12,7 @@ import os
 
 import sklearn.naive_bayes
 
-import feature
+import feature.bow
 import submissions
 import util
 

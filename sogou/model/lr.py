@@ -12,7 +12,7 @@ import os
 
 import sklearn.linear_model
 
-import feature
+import feature.bow
 import submissions
 import util
 

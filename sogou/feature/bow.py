@@ -12,46 +12,22 @@ import os
 
 import keras.utils.np_utils
 import pandas
-import sklearn.externals.joblib
-import sklearn.feature_extraction
 import sklearn.model_selection
 
 import data
+import feature
 import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 
-def build_vectorizer(df=None):
-    """
-    :param pandas.DataFrame df:
-    :retype: sklearn.feature_extraction.text.TfidfVectorizer
-    """
-    if not os.path.exists('temp'):
-        os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_vectorizer.model'.format(file_name=_file_name))
-    if os.path.exists(path):
-        vectorizer = sklearn.externals.joblib.load(path)
-    else:
-        if df is None:
-            df = data.load_train_data()
-            df = data.process_data(df)
-
-        vectorizer = sklearn.feature_extraction.text.TfidfVectorizer(stop_words=data.stopwords, max_features=8000)
-        vectorizer.fit(df['query'])
-        sklearn.externals.joblib.dump(vectorizer, path)
-
-    return vectorizer
-
-
 def transform(df):
     """
-    文本处理部分
+    转化成词频向量
     :param pandas.DataFrame df:
     :rtype: pandas.DataFrame
     """
-    # 转化成词频向量
-    vectorizer = build_vectorizer(df)
+    vectorizer = feature.build_vectorizer(df)
     vectors = vectorizer.transform(df['query']).toarray()
     print('tf-idf vectors shape:', vectors.shape)
 

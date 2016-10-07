@@ -16,6 +16,7 @@ XGBoost|0.519083969466|0.758937691522|0.551571980143|0.609864547044|/
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
+Fast Text(ngram = 1)|0.561323155853|0.795709907887|0.59238830697|0.64980712357|0.6638
 Multi-Layer Perceptron|0.56234097047|0.791113380149|0.578599011543|0.644017787387|0.6506
 
 PS: higher is better

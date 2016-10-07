@@ -12,7 +12,7 @@ import os
 
 import xgboost
 
-import feature
+import feature.bow
 import submissions
 import util
 

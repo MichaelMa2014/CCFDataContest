@@ -12,7 +12,7 @@ import os
 
 import sklearn.ensemble
 
-import feature
+import feature.bow
 import submissions
 import util
 
