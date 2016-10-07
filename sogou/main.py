@@ -20,9 +20,8 @@ if __name__ == '__main__':
     # model.svm.run()
     # model.xgb.run()
 
-    # model.mlp.run()
-    # model.cnn.run()
+    model.cnn.run()
+    # model.fast_text.run()
     # model.lstm.run()
-    model.fast_text.run()
-    model.fast_text.run(ngram=2)
+    # model.mlp.run()
     model.text_cnn.run()

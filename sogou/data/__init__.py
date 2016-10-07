@@ -30,12 +30,13 @@ label_col = ['age', 'gender', 'education']
 def load_train_data():
     """
     读入训练集数据
+    :rtype: pandas.DataFrame
     """
     train_age = []
     train_gender = []
     train_education = []
     train_query = []
-    with codecs.open('./data/user_tag_query.2W.TRAIN', encoding=conf.ENCODING) as train_file:
+    with codecs.open('data/user_tag_query.2W.TRAIN', encoding=conf.ENCODING) as train_file:
         for line in train_file:
             array = line.split('\t')
             train_age.append(int(array[1]))
@@ -49,10 +50,11 @@ def load_train_data():
 def load_test_data():
     """
     读入测试集数据
+    :rtype: pandas.DataFrame
     """
     test_id = []
     test_query = []
-    with codecs.open('./data/user_tag_query.2W.TEST', encoding=conf.ENCODING) as test_file:
+    with codecs.open('data/user_tag_query.2W.TEST', encoding=conf.ENCODING) as test_file:
         for line in test_file:
             array = line.split('\t')
             test_id.append(array[0])

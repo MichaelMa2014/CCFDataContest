@@ -97,7 +97,8 @@ def transform(df, ngram):
     tokenizer = feature.build_tokenizer(df)
     sequences = tokenizer.texts_to_sequences(line.encode('utf-8') for line in df['query'].values)
     sequences = _build_ngram_sequences(sequences, ngram)
-    sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=2000, padding='post', truncating='post')
+    sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=2000 * ngram, padding='post',
+                                                           truncating='post')
     print('sequences shape:', sequences.shape)
 
     df.drop('query', axis=1, inplace=True)

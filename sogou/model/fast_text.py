@@ -25,22 +25,18 @@ import util
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 
-def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, with_weights=False, img_name=None):
+def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, img_name=None):
     """
     构建神经网络
     :param int input_dim: 输入维数
     :param int output_dim: 输出维数
     :param int max_feature: 最大特征值
     :param int word_vec_dim: 词向量维数
-    :param bool with_weights: 初始化时是否引入词向量权重
     :param str|unicode img_name: 图片名称
     :rtype: keras.models.Sequential
     """
-    weights = [feature.build_weights_matrix(word_vec_dim=300)] if with_weights else None
-
     clf = keras.models.Sequential()
-    clf.add(keras.layers.Embedding(input_dim=max_feature + 1, output_dim=word_vec_dim, input_length=input_dim,
-                                   weights=weights))
+    clf.add(keras.layers.Embedding(input_dim=max_feature + 1, output_dim=word_vec_dim, input_length=input_dim))
     clf.add(keras.layers.GlobalAveragePooling1D())
     clf.add(keras.layers.Dense(output_dim, activation='softmax'))
 
@@ -79,16 +75,12 @@ def run(ngram=1):
     """
     :param int ngram:
     """
+    assert ngram == 1  # TODO: 目前尚不能开启ngram>1，原因在于即使是ngram=2，max_feature也会爆炸到在8G内存下神经网络无法存放（Embedding层抛出MemoryError）
     util.init_random()
 
-    if ngram == 1:
-        clf_age, acc_age = build('age', ngram=ngram, nb_epoch=9)
-        clf_gender, acc_gender = build('gender', ngram=ngram, nb_epoch=6)
-        clf_education, acc_education = build('education', ngram=ngram, nb_epoch=12)
-    else:
-        clf_age, acc_age = build('age', ngram=ngram, nb_epoch=15)
-        clf_gender, acc_gender = build('gender', ngram=ngram, nb_epoch=15)
-        clf_education, acc_education = build('education', ngram=ngram, nb_epoch=15)
+    clf_age, acc_age = build('age', ngram=ngram, nb_epoch=9)
+    clf_gender, acc_gender = build('gender', ngram=ngram, nb_epoch=6)
+    clf_education, acc_education = build('education', ngram=ngram, nb_epoch=12)
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)

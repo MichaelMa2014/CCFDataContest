@@ -63,7 +63,7 @@ def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, with_weights
     return clf
 
 
-def build(label, nb_epoch=10):
+def build(label, nb_epoch):
     """
     构建分类器
     :param str|unicode label: 类别标签
@@ -84,7 +84,7 @@ def build(label, nb_epoch=10):
 def run():
     util.init_random()
 
-    clf_age, acc_age = build('age')
+    clf_age, acc_age = build('age', nb_epoch=7)
     clf_gender, acc_gender = build('gender', nb_epoch=4)
     clf_education, acc_education = build('education', nb_epoch=5)
 
