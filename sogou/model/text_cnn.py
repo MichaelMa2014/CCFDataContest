@@ -61,16 +61,17 @@ def build_clf(input_dim, output_dim, word_vec_dim=300, img_name=None):
     return clf
 
 
-def build(label):
+def build(label, nb_epoch=10):
     """
     构建分类器
     :param str|unicode label: 类别标签
+    :param int nb_epoch:
     """
     X_train, y_train, X_val, y_val = feature.wv.build_train_set(label, validation_split=0.1, dummy=True)
 
     clf = build_clf(X_train.shape[1], y_train.shape[1],
                     img_name='image/{file_name}_{label}.png'.format(file_name=_file_name, label=label))
-    history = clf.fit(X_train, y_train, batch_size=128, nb_epoch=7, validation_data=(X_val, y_val), shuffle=True)
+    history = clf.fit(X_train, y_train, batch_size=128, nb_epoch=nb_epoch, validation_data=(X_val, y_val), shuffle=True)
 
     val_acc = history.history['val_acc'][-1]
     print('val_acc:', val_acc)
@@ -82,8 +83,8 @@ def run():
     util.init_random()
 
     clf_age, acc_age = build('age')
-    clf_gender, acc_gender = build('gender')
-    clf_education, acc_education = build('education')
+    clf_gender, acc_gender = build('gender', nb_epoch=4)
+    clf_education, acc_education = build('education', nb_epoch=5)
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)
