@@ -34,24 +34,26 @@ def build_and_pred(label, X_test, n_folds):
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
     cls_cnt = len(numpy.unique(numpy.append(y_train, y_val)))
+    print("classes count:", cls_cnt)
 
     skf = sklearn.model_selection.StratifiedKFold(n_folds, shuffle=True, random_state=util.seed)
-    clfs = [sklearn.ensemble.RandomForestClassifier(n_estimators=300, random_state=util.seed),
-            sklearn.linear_model.LogisticRegression(random_state=util.seed),
+    clfs = [sklearn.linear_model.LogisticRegression(random_state=util.seed),
             sklearn.naive_bayes.MultinomialNB(),
+            sklearn.ensemble.RandomForestClassifier(n_estimators=300, random_state=util.seed),
             xgboost.XGBClassifier(seed=util.seed)]
     clfs_cnt = len(clfs)
+    print("classifiers count:", clfs_cnt)
 
     blend_train = numpy.zeros((X_train.shape[0], clfs_cnt * cls_cnt))
     blend_val = numpy.zeros((X_val.shape[0], clfs_cnt * cls_cnt))
     blend_test = numpy.zeros((X_test.shape[0], clfs_cnt * cls_cnt))
 
     for i, clf in enumerate(clfs):
-        print("classifier No.{i}:".format(i=i), clf)
+        print("classifier No.{i}:".format(i=i + 1), clf)
         idx = i * cls_cnt
 
         for j, (train_idx, test_idx) in enumerate(skf.split(X_train, y_train)):
-            print("fold:", j)
+            print("fold:", j + 1)
 
             fold_X, fold_y = X_train[train_idx], y_train[train_idx]
             fold_test = X_train[test_idx]

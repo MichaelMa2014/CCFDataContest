@@ -26,6 +26,12 @@ algorithm|validation age score|validation gender score|validation education scor
 Fast Text (ngram=1)|0.561323155853|0.795709907887|0.59238830697|0.64980712357|0.6638
 Multi-Layer Perceptron|0.56234097047|0.791113380149|0.578599011543|0.644017787387|0.6506
 
+## 集成学习
+
+algorithm|validation age score|validation gender score|validation education score|validation final score|final score
+:-:|:-:|:-:|:-:|:-:|:-:
+Blend with 4 models (Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.567938931298|0.789581205312|0.603971318257|0.653830484955|0.6631
+
 PS: higher is better
 
 各算法具体参数请参考代码
