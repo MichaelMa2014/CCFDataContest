@@ -34,7 +34,7 @@ def build_vectorizer(df=None):
     else:
         if df is None:
             df = data.load_train_data()
-            df = data.process_data(df)
+            df = data.process_data(df, remove_stopwords=True)
 
         vectorizer = sklearn.feature_extraction.text.TfidfVectorizer(stop_words=data.stopwords, max_features=8000)
         vectorizer.fit(df['query'])
@@ -56,7 +56,7 @@ def build_tokenizer(df=None):
     else:
         if df is None:
             df = data.load_train_data()
-            df = data.process_data(df)
+            df = data.process_data(df, remove_stopwords=False)
 
         tokenizer = keras.preprocessing.text.Tokenizer()
         tokenizer.fit_on_texts(line.encode('utf-8') for line in df['query'])
@@ -78,7 +78,7 @@ def build_word2vec_model(word_vec_dim):
     else:
         src_df = data.load_train_data()
         text_df = pandas.DataFrame({'query': sum(src_df['query'].values, [])})
-        text_df = util.raw_to_texts(text_df, 'query')
+        text_df = util.raw_to_texts(text_df, 'query', remove_stopwords=False)
         print('text_df shape:', text_df.shape)
 
         model = gensim.models.Word2Vec(text_df['query'], size=word_vec_dim, min_count=1, workers=1, seed=util.seed)
@@ -106,7 +106,7 @@ def build_weights_matrix(word_vec_dim=300):
         tokenizer = build_tokenizer()
         max_feature = numpy.max(tokenizer.word_index.values())
 
-        weights = numpy.zeros((max_feature, word_vec_dim))
+        weights = numpy.zeros((max_feature + 1, word_vec_dim))
         for word, index in tokenizer.word_index.items():
             if word in word2vec.vocab:
                 weights[index] = word2vec[word]

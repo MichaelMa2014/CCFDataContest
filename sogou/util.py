@@ -17,6 +17,8 @@ import numpy
 import pandas
 import pynlpir
 
+import data
+
 seed = 42
 
 
@@ -25,11 +27,11 @@ def init_random():
     numpy.random.seed(seed)
 
 
-def raw_to_words(df, feature, stopwords=None, dictionary=None):
+def raw_to_words(df, feature, remove_stopwords=False, dictionary=None):
     """
     :param pandas.DataFrame df:
     :param str|unicode feature:
-    :param tuple|list|set|dict stopwords:
+    :param bool remove_stopwords:
     :param tuple|list|set|dict dictionary:
     :rtype: pandas.DataFrame
     """
@@ -55,10 +57,8 @@ def raw_to_words(df, feature, stopwords=None, dictionary=None):
     # 再次过滤纯数字
     df[feature] = df[feature].map(lambda wl: filter(lambda w: not digit_re.match(w), wl))
     # 去除停止词
-    if stopwords:
-        if isinstance(stopwords, (tuple, list)):
-            stopwords = set(stopwords)
-        df[feature] = df[feature].map(lambda wl: filter(lambda w: w not in stopwords, wl))
+    if remove_stopwords:
+        df[feature] = df[feature].map(lambda wl: filter(lambda w: w not in data.stopwords, wl))
     # 只保留词典中存在的词
     if dictionary:
         if isinstance(dictionary, (tuple, list)):
@@ -67,14 +67,14 @@ def raw_to_words(df, feature, stopwords=None, dictionary=None):
     return df
 
 
-def raw_to_texts(df, feature, stopwords=None, dictionary=None):
+def raw_to_texts(df, feature, remove_stopwords=False, dictionary=None):
     """
     :param pandas.DataFrame df:
     :param str|unicode feature:
-    :param tuple|list|set|dict stopwords:
+    :param bool remove_stopwords:
     :param tuple|list|set|dict dictionary:
     :rtype: pandas.DataFrame
     """
-    df = raw_to_words(df, feature, stopwords, dictionary)
+    df = raw_to_words(df, feature, remove_stopwords, dictionary)
     df[feature] = df[feature].map(lambda wl: ' '.join(wl))
     return df

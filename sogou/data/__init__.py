@@ -62,11 +62,12 @@ def load_test_data():
     return pandas.DataFrame({'id': test_id, 'query': test_query})
 
 
-def process_data(df):
+def process_data(df, remove_stopwords):
     """
     :param pandas.DataFrame df:
+    :param bool remove_stopwords:
     :rtype: pandas.DataFrame
     """
     df['query'] = df['query'].map(lambda l: ' '.join(l))
-    df = util.raw_to_texts(df, 'query')
+    df = util.raw_to_texts(df, 'query', remove_stopwords)
     return df

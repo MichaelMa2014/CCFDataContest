@@ -49,7 +49,7 @@ def build_train_set(label, validation_split=0.0, dummy=False):
         train_df = pandas.read_hdf(path)
     else:
         train_df = data.load_train_data()
-        train_df = data.process_data(train_df)
+        train_df = data.process_data(train_df, remove_stopwords=True)
         train_df = transform(train_df)
         train_df.to_hdf(path, 'train_df')
 
@@ -91,7 +91,7 @@ def build_test_set():
         test_df = pandas.read_hdf(path)
     else:
         test_df = data.load_test_data()
-        test_df = data.process_data(test_df)
+        test_df = data.process_data(test_df, remove_stopwords=True)
         test_df = transform(test_df)
         test_df.to_hdf(path, 'train_df')
 

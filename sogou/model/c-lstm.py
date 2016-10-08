@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 References:
-Sequential Short-Text Classification with Recurrent and Convolutional Neural Networks
-https://arxiv.org/abs/1603.03827
+A C-LSTM Neural Network for Text Classification
+https://arxiv.org/abs/1511.08630
 """
 
 from __future__ import absolute_import
@@ -43,6 +43,8 @@ def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, with_weights
                                    weights=weights))
 
     clf.add(keras.layers.Convolution1D(nb_filter=200, filter_length=3, activation='relu'))
+    clf.add(keras.layers.Permute((2, 1)))
+    clf.add(keras.layers.Bidirectional(keras.layers.LSTM(output_dim=100, return_sequences=True)))
     clf.add(keras.layers.GlobalMaxPooling1D())
     clf.add(keras.layers.Dropout(0.5))
 
@@ -50,7 +52,7 @@ def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, with_weights
     clf.add(keras.layers.Dropout(0.5))
     clf.add(keras.layers.Dense(output_dim, activation='softmax'))
 
-    clf.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    clf.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
     print(clf.summary())
 
     if img_name:
@@ -60,7 +62,7 @@ def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, with_weights
     return clf
 
 
-def build(label, nb_epoch):
+def build(label, nb_epoch=10):
     """
     构建分类器
     :param str|unicode label: 类别标签
@@ -81,9 +83,9 @@ def build(label, nb_epoch):
 def run():
     util.init_random()
 
-    clf_age, acc_age = build('age', nb_epoch=8)
-    clf_gender, acc_gender = build('gender', nb_epoch=6)
-    clf_education, acc_education = build('education', nb_epoch=8)
+    clf_age, acc_age = build('age')
+    clf_gender, acc_gender = build('gender')
+    clf_education, acc_education = build('education')
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)

@@ -19,9 +19,13 @@ if __name__ == '__main__':
     # model.rf.run()
     # model.svm.run()
     # model.xgb.run()
+    # model.tg.run()
 
+    model.blend.run()
+
+    model.fast_text.run()
     model.cnn.run()
-    # model.fast_text.run()
     # model.lstm.run()
     # model.mlp.run()
-    model.text_cnn.run()
+    # model.text_cnn.run()
+
