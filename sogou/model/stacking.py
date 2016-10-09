@@ -25,7 +25,7 @@ import util
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 
-def build_and_pred(label, X_test, n_folds):
+def build_blend_and_pred(label, X_test, n_folds):
     """
     构建分类器
     :param str|unicode label: 类别标签
@@ -83,13 +83,14 @@ def run(n_folds=5):
     """
     :param int n_folds:
     """
+    print("Stacking Ensemble (Blend) with 4 models")
     util.init_random()
 
     X_test, test_id = feature.bow.build_test_set()
 
-    acc_age, pred_age = build_and_pred('age', X_test, n_folds)
-    acc_gender, pred_gender = build_and_pred('gender', X_test, n_folds)
-    acc_education, pred_education = build_and_pred('education', X_test, n_folds)
+    acc_age, pred_age = build_blend_and_pred('age', X_test, n_folds)
+    acc_gender, pred_gender = build_blend_and_pred('gender', X_test, n_folds)
+    acc_education, pred_education = build_blend_and_pred('education', X_test, n_folds)
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)

@@ -79,6 +79,7 @@ def build(label, nb_epoch):
 
 
 def run():
+    print("Convolution Neural Networks")
     util.init_random()
 
     clf_age, acc_age = build('age', nb_epoch=8)

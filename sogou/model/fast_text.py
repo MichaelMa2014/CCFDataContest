@@ -76,6 +76,7 @@ def run(ngram=1):
     :param int ngram:
     """
     assert ngram == 1  # TODO: 目前尚不能开启ngram>1，原因在于即使是ngram=2，max_feature也会爆炸到在8G内存下神经网络无法存放（Embedding层抛出MemoryError）
+    print("Fast Text")
     util.init_random()
 
     clf_age, acc_age = build('age', ngram=ngram, nb_epoch=9)

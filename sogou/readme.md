@@ -5,8 +5,8 @@
 ## 传统模型
 
 - [scikit-learn](http://scikit-learn.org/)
-- [XBgoost](http://xgboost.readthedocs.io/en/latest/)
 - [TextGrocery](http://textgrocery.readthedocs.io/zh/latest/)
+- [XBgoost](http://xgboost.readthedocs.io/en/latest/)
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
@@ -31,7 +31,7 @@ Multi-Layer Perceptron|0.56234097047|0.791113380149|0.578599011543|0.64401778738
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
-Blend with 4 models (Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.567938931298|0.789581205312|0.603971318257|0.653830484955|0.6631
+Stacking Ensemble (Blend) with 4 models (Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.567938931298|0.789581205312|0.603971318257|0.653830484955|0.6631
 
 PS: higher is better
 

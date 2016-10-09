@@ -38,6 +38,7 @@ def build(label):
 
 
 def run():
+    print("Multinomial Naive Bayes")
     util.init_random()
 
     clf_age, acc_age = build('age')

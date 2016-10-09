@@ -18,14 +18,14 @@ if __name__ == '__main__':
     # model.mnb.run()
     # model.rf.run()
     # model.svm.run()
-    # model.xgb.run()
     # model.tg.run()
+    # model.xgb.run()
 
-    model.blend.run()
+    # model.stacking.run()
 
-    model.fast_text.run()
-    model.cnn.run()
+    # model.fast_text.run()
+    # model.cnn.run()
     # model.lstm.run()
-    # model.mlp.run()
+    model.mlp.run()
     # model.text_cnn.run()
 

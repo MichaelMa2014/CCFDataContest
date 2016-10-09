@@ -79,6 +79,7 @@ def build(label, nb_epoch=8):
 
 
 def run():
+    print("Long Short-Term Memory")
     util.init_random()
 
     clf_age, acc_age = build('age')

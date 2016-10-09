@@ -62,6 +62,7 @@ def build(label, nb_epoch):
 
 
 def run():
+    print("Multi-Layer Perceptron")
     util.init_random()
 
     clf_age, acc_age = build('age', nb_epoch=2)

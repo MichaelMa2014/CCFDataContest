@@ -36,6 +36,7 @@ def build(label):
 
 
 def run():
+    print("XGBoost")
     util.init_random()
 
     clf_age, acc_age = build('age')
