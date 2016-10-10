@@ -32,7 +32,7 @@ Multi-Layer Perceptron|0.56234097047|0.791113380149|0.578599011543|0.64401778738
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
-Stacking Ensemble (Blend) with 5 models (ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.567430025445|0.79315628192|0.603971318257|0.655220256528|0.6647
+Stacking Ensemble (Blend) using Logistic Regression with 5 models (ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.567430025445|0.79315628192|0.603971318257|0.655220256528|0.6647
 Voting Ensemble with 6 models (ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, Support Vector Machine, XGBoost)|0.538422391858|0.783452502554|0.595146166575|0.639007020329|/
 
 PS: higher is better

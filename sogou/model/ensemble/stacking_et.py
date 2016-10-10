@@ -83,7 +83,7 @@ def run(n_folds=5):
     """
     :param int n_folds:
     """
-    print("Stacking Ensemble (Blend) using Logistic Regression with 5 models")
+    print("Stacking Ensemble (Blend) using ExtraTrees with 5 models")
     util.init_random()
 
     X_test, test_id = feature.bow.build_test_set()
