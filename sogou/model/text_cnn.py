@@ -85,9 +85,9 @@ def run():
     print("TextCNN")
     util.init_random()
 
-    clf_age, acc_age = build('age', nb_epoch=7)
+    clf_age, acc_age = build('age', nb_epoch=5)
     clf_gender, acc_gender = build('gender', nb_epoch=4)
-    clf_education, acc_education = build('education', nb_epoch=5)
+    clf_education, acc_education = build('education', nb_epoch=4)
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)

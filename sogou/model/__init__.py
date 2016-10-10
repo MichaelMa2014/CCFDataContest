@@ -8,6 +8,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
+import model.et
 import model.lr
 import model.mnb
 import model.rf
@@ -22,3 +23,4 @@ import model.mlp
 import model.text_cnn
 
 import model.stacking
+import model.voting

@@ -15,7 +15,6 @@ import sklearn.model_selection
 import sklearn.ensemble
 import sklearn.linear_model
 import sklearn.naive_bayes
-import sklearn.svm
 import xgboost
 
 import feature.bow
@@ -37,7 +36,8 @@ def build_blend_and_pred(label, X_test, n_folds):
     print("classes count:", cls_cnt)
 
     skf = sklearn.model_selection.StratifiedKFold(n_folds, shuffle=True, random_state=util.seed)
-    clfs = [sklearn.linear_model.LogisticRegression(random_state=util.seed),
+    clfs = [sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, random_state=util.seed),
+            sklearn.linear_model.LogisticRegression(random_state=util.seed),
             sklearn.naive_bayes.MultinomialNB(),
             sklearn.ensemble.RandomForestClassifier(n_estimators=300, random_state=util.seed),
             xgboost.XGBClassifier(seed=util.seed)]
@@ -83,7 +83,7 @@ def run(n_folds=5):
     """
     :param int n_folds:
     """
-    print("Stacking Ensemble (Blend) with 4 models")
+    print("Stacking Ensemble (Blend) with 5 models")
     util.init_random()
 
     X_test, test_id = feature.bow.build_test_set()

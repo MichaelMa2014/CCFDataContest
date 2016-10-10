@@ -11,10 +11,6 @@ from __future__ import with_statement
 import os
 
 import sklearn.ensemble
-import sklearn.linear_model
-import sklearn.naive_bayes
-import sklearn.svm
-import xgboost
 
 import feature.bow
 import submissions
@@ -30,14 +26,7 @@ def build(label):
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
 
-    clfs = [('et', sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, random_state=util.seed)),
-            ('lr', sklearn.linear_model.LogisticRegression(random_state=util.seed)),
-            ('mnb', sklearn.naive_bayes.MultinomialNB()),
-            ('rf', sklearn.ensemble.RandomForestClassifier(n_estimators=300, random_state=util.seed)),
-            ('svm', sklearn.svm.LinearSVC(random_state=util.seed)),
-            ('xgb', xgboost.XGBClassifier(seed=util.seed))]
-
-    clf = sklearn.ensemble.VotingClassifier(clfs)
+    clf = sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, random_state=util.seed)
     clf.fit(X_train, y_train)
 
     val_acc = clf.score(X_val, y_val)
@@ -47,7 +36,7 @@ def build(label):
 
 
 def run():
-    print("Voting Ensemble with 6 models")
+    print("Extra Trees")
     util.init_random()
 
     clf_age, acc_age = build('age')

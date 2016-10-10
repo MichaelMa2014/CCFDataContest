@@ -10,6 +10,7 @@
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
+Extra Trees|0.527226463104|0.787538304392|0.564809707667|0.626524825054|
 Logistic Regression|0.561832061069|0.779877425945|0.583011583012|0.641573690008|0.6485
 Multinomial Naive Bayes|0.53893129771|0.779877425945|0.564258135687|0.627688953114|/
 Random Forest|0.517048346056|0.787538304392|0.553778268064|0.619454972837|/
@@ -31,7 +32,7 @@ Multi-Layer Perceptron|0.56234097047|0.791113380149|0.578599011543|0.64401778738
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
-Stacking Ensemble (Blend) with 4 models (Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.567938931298|0.789581205312|0.603971318257|0.653830484955|0.6631
+Stacking Ensemble (Blend) with 4 models (Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.567430025445|0.79315628192|0.603971318257|0.655220256528|0.6647
 
 PS: higher is better
 
