@@ -9,23 +9,26 @@ from __future__ import unicode_literals
 from __future__ import with_statement
 
 import conf
-import model
+import model.ensemble
+import model.single
 
 if __name__ == '__main__':
     conf.pynlpir.init()
 
-    # model.lr.run()
-    # model.mnb.run()
-    # model.rf.run()
-    # model.svm.run()
-    # model.tg.run()
-    # model.xgb.run()
+    # model.single.et.run()
+    # model.single.lr.run()
+    # model.single.mnb.run()
+    # model.single.rf.run()
+    # model.single.svm.run()
+    # model.single.tg.run()
+    # model.single.xgb.run()
 
-    # model.stacking.run()
+    model.ensemble.stacking_et.run()
+    # model.ensemble.stacking_lr.run()
+    # model.ensemble.voting.run()
 
-    # model.fast_text.run()
-    # model.cnn.run()
-    # model.lstm.run()
-    model.mlp.run()
-    # model.text_cnn.run()
-
+    # model.single.fast_text.run()
+    # model.single.cnn.run()
+    # model.single.lstm.run()
+    # model.single.mlp.run()
+    model.single.text_cnn.run()

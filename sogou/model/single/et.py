@@ -36,7 +36,7 @@ def build(label):
 
 
 def run():
-    print("Extra Trees")
+    print("ExtraTrees")
     util.init_random()
 
     clf_age, acc_age = build('age')

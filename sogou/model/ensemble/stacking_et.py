@@ -69,7 +69,7 @@ def build_blend_and_pred(label, X_test, n_folds):
         blend_val[:, idx:idx + cls_cnt] /= clfs_cnt
         blend_test[:, idx:idx + cls_cnt] /= clfs_cnt
 
-    blend_clf = sklearn.linear_model.LogisticRegression(random_state=util.seed)
+    blend_clf = sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, random_state=util.seed)
     blend_clf.fit(blend_train, y_train)
 
     val_acc = blend_clf.score(blend_val, y_val)
@@ -83,7 +83,7 @@ def run(n_folds=5):
     """
     :param int n_folds:
     """
-    print("Stacking Ensemble (Blend) with 5 models")
+    print("Stacking Ensemble (Blend) using Logistic Regression with 5 models")
     util.init_random()
 
     X_test, test_id = feature.bow.build_test_set()

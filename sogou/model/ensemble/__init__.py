@@ -8,5 +8,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
-import model.ensemble
-import model.single
+import model.ensemble.stacking_et
+import model.ensemble.stacking_lr
+import model.ensemble.voting
