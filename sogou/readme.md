@@ -27,12 +27,14 @@ algorithm|validation age score|validation gender score|validation education scor
 Convolution Neural Networks|0.537404580198|0.80132788505|0.575841147533|0.63819120426|/
 Fast Text (ngram=1)|0.561323155853|0.795709907887|0.59238830697|0.64980712357|0.6638
 Multi-Layer Perceptron|0.56234097047|0.791113380149|0.578599011543|0.644017787387|0.6506
+TextCNN|0.551145038744|0.805413687254|0.565361279943|0.64064000198|0.6551
 
 ## 集成学习
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
 Stacking Ensemble (Blend) using Logistic Regression with 5 models (ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.567430025445|0.79315628192|0.603971318257|0.655220256528|0.6647
+Stacking Ensemble (Blend) using ExtraTrees with 5 models (ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.563867684478|0.782431052094|0.606177606178|0.650825447583|/
 Voting Ensemble with 6 models (ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, Support Vector Machine, XGBoost)|0.538422391858|0.783452502554|0.595146166575|0.639007020329|/
 
 PS: higher is better
