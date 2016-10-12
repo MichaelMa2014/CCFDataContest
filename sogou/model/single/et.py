@@ -26,7 +26,7 @@ def build(label):
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
 
-    clf = sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, random_state=util.seed)
+    clf = sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed)
     clf.fit(X_train, y_train)
 
     val_acc = clf.score(X_val, y_val)

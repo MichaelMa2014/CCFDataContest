@@ -23,12 +23,13 @@ if __name__ == '__main__':
     # model.single.tg.run()
     # model.single.xgb.run()
 
-    model.ensemble.stacking_et.run()
-    # model.ensemble.stacking_lr.run()
-    # model.ensemble.voting.run()
+    # model.ensemble.stacking_et.run()
+    model.ensemble.stacking_lr.run()
+    # model.ensemble.voting_hard.run()
+    # model.ensemble.voting_soft.run()
 
     # model.single.fast_text.run()
     # model.single.cnn.run()
     # model.single.lstm.run()
     # model.single.mlp.run()
-    model.single.text_cnn.run()
+    # model.single.text_cnn.run()

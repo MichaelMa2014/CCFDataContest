@@ -23,6 +23,7 @@ import submissions
 import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
+param = {'batch_size': 128, 'age': 8, 'gender': 8, 'education': 8}
 
 
 def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, with_weights=True, img_name=None):
@@ -60,17 +61,17 @@ def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, with_weights
     return clf
 
 
-def build(label, nb_epoch=8):
+def build(label):
     """
     构建分类器
     :param str|unicode label: 类别标签
-    :param int nb_epoch:
     """
     X_train, y_train, X_val, y_val, max_feature = feature.wv.build_train_set(label, validation_split=0.1, dummy=True)
 
     clf = build_clf(X_train.shape[1], y_train.shape[1], max_feature,
                     img_name='image/{file_name}_{label}.png'.format(file_name=_file_name, label=label))
-    history = clf.fit(X_train, y_train, batch_size=128, nb_epoch=nb_epoch, validation_data=(X_val, y_val), shuffle=True)
+    history = clf.fit(X_train, y_train, batch_size=param['batch_size'], nb_epoch=param[label],
+                      validation_data=(X_val, y_val), shuffle=True)
 
     val_acc = history.history['val_acc'][-1]
     print('val_acc:', val_acc)

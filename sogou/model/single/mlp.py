@@ -18,6 +18,7 @@ import submissions
 import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
+param = {'batch_size': 512, 'age': 2, 'gender': 1, 'education': 2}
 
 
 def build_clf(input_dim, output_dim, img_name=None):
@@ -43,17 +44,17 @@ def build_clf(input_dim, output_dim, img_name=None):
     return clf
 
 
-def build(label, nb_epoch):
+def build(label):
     """
     构建分类器
     :param str|unicode label: 类别标签
-    :param int nb_epoch:
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1, dummy=True)
 
     clf = build_clf(X_train.shape[1], y_train.shape[1],
                     img_name='image/{file_name}_{label}.png'.format(file_name=_file_name, label=label))
-    history = clf.fit(X_train, y_train, batch_size=512, nb_epoch=nb_epoch, validation_data=(X_val, y_val), shuffle=True)
+    history = clf.fit(X_train, y_train, batch_size=param['batch_size'], nb_epoch=param[label],
+                      validation_data=(X_val, y_val), shuffle=True)
 
     val_acc = history.history['val_acc'][-1]
     print('val_acc:', val_acc)
@@ -65,9 +66,9 @@ def run():
     print("Multi-Layer Perceptron")
     util.init_random()
 
-    clf_age, acc_age = build('age', nb_epoch=2)
-    clf_gender, acc_gender = build('gender', nb_epoch=1)
-    clf_education, acc_education = build('education', nb_epoch=2)
+    clf_age, acc_age = build('age')
+    clf_gender, acc_gender = build('gender')
+    clf_education, acc_education = build('education')
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)

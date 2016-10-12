@@ -60,8 +60,7 @@ def build_train_set(label, validation_split=0.0, dummy=False):
     # 去掉label未知的数据
     train_df = train_df[train_df[label] > 0]
 
-    target = keras.utils.np_utils.to_categorical(train_df[label].values) if dummy else train_df[label].astype(
-        'category')
+    target = keras.utils.np_utils.to_categorical(train_df[label].values) if dummy else train_df[label].values
     train_df.drop(data.label_col, axis=1, inplace=True)
     print('train_df shape:', train_df.shape)
     print('target shape:', target.shape)

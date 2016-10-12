@@ -23,6 +23,7 @@ import submissions
 import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
+param = {'batch_size': 128, 'age': 9, 'gender': 6, 'education': 12}
 
 
 def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, img_name=None):
@@ -50,12 +51,11 @@ def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, img_name=Non
     return clf
 
 
-def build(label, ngram, nb_epoch):
+def build(label, ngram):
     """
     构建分类器
     :param str|unicode label: 类别标签
     :param int ngram:
-    :param int nb_epoch:
     """
     X_train, y_train, X_val, y_val, max_feature = feature.ngram.build_train_set(label, validation_split=0.1, dummy=True,
                                                                                 ngram=ngram)
@@ -63,7 +63,8 @@ def build(label, ngram, nb_epoch):
     clf = build_clf(X_train.shape[1], y_train.shape[1], max_feature,
                     img_name='image/{file_name}_{label}_ngram{ngram}.png'.format(file_name=_file_name, label=label,
                                                                                  ngram=ngram))
-    history = clf.fit(X_train, y_train, batch_size=128, nb_epoch=nb_epoch, validation_data=(X_val, y_val), shuffle=True)
+    history = clf.fit(X_train, y_train, batch_size=param['batch_size'], nb_epoch=param[label],
+                      validation_data=(X_val, y_val), shuffle=True)
 
     val_acc = history.history['val_acc'][-1]
     print('val_acc:', val_acc)
@@ -79,9 +80,9 @@ def run(ngram=1):
     print("Fast Text")
     util.init_random()
 
-    clf_age, acc_age = build('age', ngram=ngram, nb_epoch=9)
-    clf_gender, acc_gender = build('gender', ngram=ngram, nb_epoch=6)
-    clf_education, acc_education = build('education', ngram=ngram, nb_epoch=12)
+    clf_age, acc_age = build('age', ngram=ngram)
+    clf_gender, acc_gender = build('gender', ngram=ngram)
+    clf_education, acc_education = build('education', ngram=ngram)
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)

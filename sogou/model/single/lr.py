@@ -26,7 +26,7 @@ def build(label):
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
 
-    clf = sklearn.linear_model.LogisticRegression(random_state=util.seed)
+    clf = sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed)
     clf.fit(X_train, y_train)
 
     val_acc = clf.score(X_val, y_val)
