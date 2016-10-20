@@ -41,5 +41,8 @@ def load_kwh_data():
         df = pandas.read_csv('all_user_yongdian_data_2015.csv')
         df['DATA_DATE'] = pandas.to_datetime(df['DATA_DATE'])
         pt = pandas.pivot_table(df, values='KWH', index=['CONS_NO'], columns=['DATA_DATE'])
+        ptT = pt.T
+        ptT.fillna(ptT.median()) # fillna 按列补值
+        pt = ptT.T
         pt.to_csv(path, index=True, quoting=csv.QUOTE_NONE)
     return pandas.read_csv(path)
