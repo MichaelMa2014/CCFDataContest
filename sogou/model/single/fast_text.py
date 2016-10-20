@@ -23,10 +23,10 @@ import submissions
 import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
-param = {'batch_size': 128, 'age': 9, 'gender': 6, 'education': 12}
+param = {'ngram': 1, 'batch_size': 128, 'age': 17, 'gender': 14, 'education': 24}
 
 
-def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, img_name=None):
+def build_clf(input_dim, output_dim, max_feature, word_vec_dim=100, img_name=None):
     """
     构建神经网络
     :param int input_dim: 输入维数
@@ -51,18 +51,17 @@ def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, img_name=Non
     return clf
 
 
-def build(label, ngram):
+def build(label):
     """
     构建分类器
     :param str|unicode label: 类别标签
-    :param int ngram:
     """
     X_train, y_train, X_val, y_val, max_feature = feature.ngram.build_train_set(label, validation_split=0.1, dummy=True,
-                                                                                ngram=ngram)
+                                                                                ngram=param['ngram'])
 
     clf = build_clf(X_train.shape[1], y_train.shape[1], max_feature,
                     img_name='image/{file_name}_{label}_ngram{ngram}.png'.format(file_name=_file_name, label=label,
-                                                                                 ngram=ngram))
+                                                                                 ngram=param['ngram']))
     history = clf.fit(X_train, y_train, batch_size=param['batch_size'], nb_epoch=param[label],
                       validation_data=(X_val, y_val), shuffle=True)
 
@@ -72,26 +71,25 @@ def build(label, ngram):
     return clf, val_acc
 
 
-def run(ngram=1):
-    """
-    :param int ngram:
-    """
-    assert ngram == 1  # TODO: 目前尚不能开启ngram>1，原因在于即使是ngram=2，max_feature也会爆炸到在8G内存下神经网络无法存放（Embedding层抛出MemoryError）
+def run():
+    # TODO: 目前尚不能开启ngram>1，原因在于即使是ngram=2，max_feature也会爆炸到在8G内存下神经网络无法存放（Embedding层抛出MemoryError）
+    assert param['ngram'] == 1
+
     print("Fast Text")
     util.init_random()
 
-    clf_age, acc_age = build('age', ngram=ngram)
-    clf_gender, acc_gender = build('gender', ngram=ngram)
-    clf_education, acc_education = build('education', ngram=ngram)
+    clf_age, acc_age = build('age')
+    clf_gender, acc_gender = build('gender')
+    clf_education, acc_education = build('education')
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)
 
-    X_test, test_id = feature.ngram.build_test_set(ngram=ngram)
+    X_test = feature.ngram.build_test_set(ngram=param['ngram'])
 
     pred_age = clf_age.predict_classes(X_test).flatten()
     pred_gender = clf_gender.predict_classes(X_test).flatten()
     pred_education = clf_education.predict_classes(X_test).flatten()
 
-    submissions.save_csv(test_id, pred_age, pred_gender, pred_education,
-                         '{file_name}_ngram{ngram}.csv'.format(file_name=_file_name, ngram=ngram))
+    submissions.save_csv(pred_age, pred_gender, pred_education,
+                         '{file_name}_ngram{ngram}.csv'.format(file_name=_file_name, ngram=param['ngram']))

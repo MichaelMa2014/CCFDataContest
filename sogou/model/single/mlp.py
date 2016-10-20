@@ -18,7 +18,7 @@ import submissions
 import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
-param = {'batch_size': 512, 'age': 2, 'gender': 1, 'education': 2}
+param = {'batch_size': 512, 'age': 4, 'gender': 4, 'education': 6}
 
 
 def build_clf(input_dim, output_dim, img_name=None):
@@ -30,8 +30,7 @@ def build_clf(input_dim, output_dim, img_name=None):
     :rtype: keras.models.Sequential
     """
     clf = keras.models.Sequential()
-    clf.add(keras.layers.Dense(1024, activation='relu', input_dim=input_dim))
-    clf.add(keras.layers.Dense(256, activation='relu'))
+    clf.add(keras.layers.Dense(128, activation='relu', input_dim=input_dim))
     clf.add(keras.layers.Dense(output_dim, activation='softmax'))
 
     clf.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -73,10 +72,10 @@ def run():
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)
 
-    X_test, test_id = feature.bow.build_test_set()
+    X_test = feature.bow.build_test_set()
 
     pred_age = clf_age.predict_classes(X_test).flatten()
     pred_gender = clf_gender.predict_classes(X_test).flatten()
     pred_education = clf_education.predict_classes(X_test).flatten()
 
-    submissions.save_csv(test_id, pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))
+    submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))

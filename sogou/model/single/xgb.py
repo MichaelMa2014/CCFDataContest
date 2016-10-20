@@ -46,10 +46,10 @@ def run():
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)
 
-    X_test, test_id = feature.bow.build_test_set()
+    X_test = feature.bow.build_test_set()
 
     pred_age = clf_age.predict(X_test)
     pred_gender = clf_gender.predict(X_test)
     pred_education = clf_education.predict(X_test)
 
-    submissions.save_csv(test_id, pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))
+    submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))

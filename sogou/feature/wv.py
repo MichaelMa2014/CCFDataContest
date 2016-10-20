@@ -12,6 +12,7 @@ import os
 
 import keras.preprocessing.sequence
 import keras.utils.np_utils
+import numpy
 import pandas
 import sklearn.model_selection
 
@@ -51,7 +52,7 @@ def build_train_set(label, validation_split=0.0, dummy=False):
         train_df = pandas.read_hdf(path)
     else:
         train_df = data.load_train_data()
-        train_df = data.process_data(train_df, remove_stopwords=False)
+        data.process_data(train_df, remove_stopwords=False)
         train_df = transform(train_df)
         train_df.to_hdf(path, 'train_df')
 
@@ -60,22 +61,24 @@ def build_train_set(label, validation_split=0.0, dummy=False):
     # 去掉label未知的数据
     train_df = train_df[train_df[label] > 0]
 
-    target = keras.utils.np_utils.to_categorical(train_df[label].values) if dummy else train_df[label].values
+    stratify = train_df[label].values
     train_df.drop(data.label_col, axis=1, inplace=True)
+    target = keras.utils.np_utils.to_categorical(stratify) if dummy else stratify
     print('train_df shape:', train_df.shape)
-    print('target shape:', target.shape)
 
     if validation_split == 0.0:
         return train_df.values, target
     X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(train_df.values, target,
                                                                               test_size=validation_split,
-                                                                              random_state=util.seed)
+                                                                              random_state=util.seed,
+                                                                              stratify=stratify)
     return X_train, y_train, X_val, y_val, max_feature
 
 
 def build_test_set():
     """
     处理测试集
+    :rtype: numpy.ndarray
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
@@ -84,12 +87,10 @@ def build_test_set():
         test_df = pandas.read_hdf(path)
     else:
         test_df = data.load_test_data()
-        test_df = data.process_data(test_df, remove_stopwords=False)
+        test_df.drop('id', axis=1, inplace=True)
+        data.process_data(test_df, remove_stopwords=False)
         test_df = transform(test_df)
         test_df.to_hdf(path, 'train_df')
 
-    test_id = test_df['id']
-    test_df.drop('id', axis=1, inplace=True)
     print('test_df shape:', test_df.shape)
-
-    return test_df.values, test_id
+    return test_df.values

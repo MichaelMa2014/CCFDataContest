@@ -33,7 +33,6 @@ def raw_to_words(df, feature, remove_stopwords=False, dictionary=None):
     :param str|unicode feature:
     :param bool remove_stopwords:
     :param tuple|list|set|dict dictionary:
-    :rtype: pandas.DataFrame
     """
     # 标点符号替换成空格
     filter_char = keras.preprocessing.text.base_filter()
@@ -64,7 +63,6 @@ def raw_to_words(df, feature, remove_stopwords=False, dictionary=None):
         if isinstance(dictionary, (tuple, list)):
             dictionary = set(dictionary)
         df[feature] = df[feature].map(lambda wl: filter(lambda w: w in dictionary, wl))
-    return df
 
 
 def raw_to_texts(df, feature, remove_stopwords=False, dictionary=None):
@@ -73,8 +71,6 @@ def raw_to_texts(df, feature, remove_stopwords=False, dictionary=None):
     :param str|unicode feature:
     :param bool remove_stopwords:
     :param tuple|list|set|dict dictionary:
-    :rtype: pandas.DataFrame
     """
-    df = raw_to_words(df, feature, remove_stopwords, dictionary)
+    raw_to_words(df, feature, remove_stopwords, dictionary)
     df[feature] = df[feature].map(lambda wl: ' '.join(wl))
-    return df

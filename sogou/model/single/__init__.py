@@ -8,6 +8,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
+import model.single.bnb
 import model.single.et
 import model.single.lr
 import model.single.mnb
@@ -21,3 +22,5 @@ import model.single.fast_text
 import model.single.lstm
 import model.single.mlp
 import model.single.text_cnn
+
+import model.single.mlp_sklearn

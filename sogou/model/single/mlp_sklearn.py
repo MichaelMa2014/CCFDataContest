@@ -10,7 +10,7 @@ from __future__ import with_statement
 
 import os
 
-import sklearn.svm
+import sklearn.neural_network
 
 import feature.bow
 import submissions
@@ -26,7 +26,8 @@ def build(label):
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
 
-    clf = sklearn.svm.LinearSVC(C=0.1, random_state=util.seed)
+    clf = sklearn.neural_network.MLPClassifier(hidden_layer_sizes=(100,), verbose=True, early_stopping=True,
+                                               validation_fraction=0.1)
     clf.fit(X_train, y_train)
 
     val_acc = clf.score(X_val, y_val)
@@ -36,7 +37,7 @@ def build(label):
 
 
 def run():
-    print("Support Vector Machine")
+    print("Multi-Layer Perceptron by scikit-learn")
     util.init_random()
 
     clf_age, acc_age = build('age')

@@ -105,13 +105,13 @@ def transform(df, ngram):
     return df.join(pandas.DataFrame(sequences.tolist()))
 
 
-def build_train_set(label, ngram, validation_split=0.0, dummy=False):
+def build_train_set(label, validation_split=0.0, dummy=False, ngram=1):
     """
     处理训练集和验证集
     :param str|unicode label: 类别标签
-    :param int ngram:
     :param float validation_split: 验证集比例，如果为0.0则不返回验证集
     :param bool dummy: 是否将类别转化成哑变量
+    :param int ngram:
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
@@ -120,7 +120,7 @@ def build_train_set(label, ngram, validation_split=0.0, dummy=False):
         train_df = pandas.read_hdf(path)
     else:
         train_df = data.load_train_data()
-        train_df = data.process_data(train_df, remove_stopwords=False)
+        data.process_data(train_df, remove_stopwords=False)
         train_df = transform(train_df, ngram)
         train_df.to_hdf(path, 'train_df')
 
@@ -129,23 +129,25 @@ def build_train_set(label, ngram, validation_split=0.0, dummy=False):
     # 去掉label未知的数据
     train_df = train_df[train_df[label] > 0]
 
-    target = keras.utils.np_utils.to_categorical(train_df[label].values) if dummy else train_df[label].values
+    stratify = train_df[label].values
     train_df.drop(data.label_col, axis=1, inplace=True)
+    target = keras.utils.np_utils.to_categorical(stratify) if dummy else stratify
     print('train_df shape:', train_df.shape)
-    print('target shape:', target.shape)
 
     if validation_split == 0.0:
         return train_df.values, target
     X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(train_df.values, target,
                                                                               test_size=validation_split,
-                                                                              random_state=util.seed)
+                                                                              random_state=util.seed,
+                                                                              stratify=stratify)
     return X_train, y_train, X_val, y_val, max_feature
 
 
-def build_test_set(ngram):
+def build_test_set(ngram=1):
     """
     处理测试集
     :param int ngram:
+    :rtype: numpy.ndarray
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
@@ -154,12 +156,10 @@ def build_test_set(ngram):
         test_df = pandas.read_hdf(path)
     else:
         test_df = data.load_test_data()
-        test_df = data.process_data(test_df, remove_stopwords=False)
+        test_df.drop('id', axis=1, inplace=True)
+        data.process_data(test_df, remove_stopwords=False)
         test_df = transform(test_df, ngram)
         test_df.to_hdf(path, 'train_df')
 
-    test_id = test_df['id']
-    test_df.drop('id', axis=1, inplace=True)
     print('test_df shape:', test_df.shape)
-
-    return test_df.values, test_id
+    return test_df.values

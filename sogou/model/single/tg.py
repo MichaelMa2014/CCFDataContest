@@ -33,7 +33,7 @@ def build(label):
         train_df = pandas.read_hdf(path)
     else:
         train_df = data.load_train_data()
-        train_df = data.process_data(train_df, remove_stopwords=True)
+        data.process_data(train_df, remove_stopwords=True)
         train_df.to_hdf(path, 'train_df')
 
     train_df = train_df[train_df[label] > 0]
@@ -68,12 +68,12 @@ def run():
         test_df = pandas.read_hdf(path)
     else:
         test_df = data.load_test_data()
-        test_df = data.process_data(test_df, remove_stopwords=True)
+        test_df.drop('id', axis=1, inplace=True)
+        data.process_data(test_df, remove_stopwords=True)
         test_df.to_hdf(path, 'test_df')
-    test_id = test_df['id']
 
     pred_age = [clf_age.predict(text).predicted_y for text in test_df['query']]
     pred_gender = [clf_gender.predict(text).predicted_y for text in test_df['query']]
     pred_education = [clf_education.predict(text).predicted_y for text in test_df['query']]
 
-    submissions.save_csv(test_id, pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))
+    submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))

@@ -10,7 +10,7 @@ from __future__ import with_statement
 
 import os
 
-import sklearn.svm
+import sklearn.naive_bayes
 
 import feature.bow
 import submissions
@@ -26,7 +26,7 @@ def build(label):
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
 
-    clf = sklearn.svm.LinearSVC(C=0.1, random_state=util.seed)
+    clf = sklearn.naive_bayes.BernoulliNB()
     clf.fit(X_train, y_train)
 
     val_acc = clf.score(X_val, y_val)
@@ -36,7 +36,7 @@ def build(label):
 
 
 def run():
-    print("Support Vector Machine")
+    print("Bernoulli Naive Bayes")
     util.init_random()
 
     clf_age, acc_age = build('age')

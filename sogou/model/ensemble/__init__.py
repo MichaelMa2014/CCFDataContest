@@ -12,3 +12,5 @@ import model.ensemble.stacking_et
 import model.ensemble.stacking_lr
 import model.ensemble.voting_hard
 import model.ensemble.voting_soft
+
+import model.ensemble.stacking_lr_new

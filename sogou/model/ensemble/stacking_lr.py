@@ -25,14 +25,14 @@ import submissions
 import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
+n_folds = 5
 
 
-def build_blend_and_pred(label, X_test, n_folds):
+def build_blend_and_pred(label, X_test):
     """
     构建分类器
     :param str|unicode label: 类别标签
     :param numpy.ndarray X_test:
-    :param int n_folds:
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
     cls_cnt = len(numpy.unique(numpy.append(y_train, y_val)))
@@ -42,6 +42,7 @@ def build_blend_and_pred(label, X_test, n_folds):
     clfs = [
         sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed),
         sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed),
+        sklearn.naive_bayes.BernoulliNB(),
         sklearn.naive_bayes.MultinomialNB(),
         sklearn.ensemble.RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed),
         xgboost.XGBClassifier(seed=util.seed)
@@ -79,19 +80,15 @@ def build_blend_and_pred(label, X_test, n_folds):
 
             clf.fit(fold_X, fold_y)
             fold_pred = clf.predict_proba(fold_test)
+            pred_val = clf.predict_proba(X_val)
+            pred_test = clf.predict_proba(X_test)
 
             if isinstance(clf, keras.wrappers.scikit_learn.KerasClassifier):
                 fold_pred = numpy.delete(fold_pred, 0, axis=1)
-
-            assert blend_train.shape[1] == fold_pred.shape[1] * clfs_cnt
-            blend_train[test_idx, idx:idx + cls_cnt] = fold_pred
-
-            pred_val = clf.predict_proba(X_val)
-            pred_test = clf.predict_proba(X_test)
-            if isinstance(clf, keras.wrappers.scikit_learn.KerasClassifier):
                 pred_val = numpy.delete(pred_val, 0, axis=1)
                 pred_test = numpy.delete(pred_test, 0, axis=1)
 
+            blend_train[test_idx, idx:idx + cls_cnt] = fold_pred
             blend_val[:, idx:idx + cls_cnt] += pred_val
             blend_test[:, idx:idx + cls_cnt] += pred_test
 
@@ -108,20 +105,17 @@ def build_blend_and_pred(label, X_test, n_folds):
     return val_acc, pred
 
 
-def run(n_folds=5):
-    """
-    :param int n_folds:
-    """
-    print("Stacking Ensemble (Blend) using Logistic Regression with 6 models")
+def run():
+    print("Stacking Ensemble (Blend) using Logistic Regression with 7 models")
     util.init_random()
 
-    X_test, test_id = feature.bow.build_test_set()
+    X_test = feature.bow.build_test_set()
 
-    acc_age, pred_age = build_blend_and_pred('age', X_test, n_folds)
-    acc_gender, pred_gender = build_blend_and_pred('gender', X_test, n_folds)
-    acc_education, pred_education = build_blend_and_pred('education', X_test, n_folds)
+    acc_age, pred_age = build_blend_and_pred('age', X_test)
+    acc_gender, pred_gender = build_blend_and_pred('gender', X_test)
+    acc_education, pred_education = build_blend_and_pred('education', X_test)
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)
 
-    submissions.save_csv(test_id, pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))
+    submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))

@@ -37,7 +37,7 @@ def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, with_weights
     :param str|unicode img_name: 图片名称
     :rtype: keras.models.Sequential
     """
-    weights = [feature.build_weights_matrix(word_vec_dim=300)] if with_weights else None
+    weights = [feature.build_weights_matrix(word_vec_dim=word_vec_dim)] if with_weights else None
 
     clf = keras.models.Sequential()
     clf.add(keras.layers.Embedding(input_dim=max_feature + 1, output_dim=word_vec_dim, input_length=input_dim,
@@ -91,10 +91,10 @@ def run():
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)
 
-    X_test, test_id = feature.wv.build_test_set()
+    X_test = feature.wv.build_test_set()
 
     pred_age = clf_age.predict_classes(X_test).flatten()
     pred_gender = clf_gender.predict_classes(X_test).flatten()
     pred_education = clf_education.predict_classes(X_test).flatten()
 
-    submissions.save_csv(test_id, pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))
+    submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))

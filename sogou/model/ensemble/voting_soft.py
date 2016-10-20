@@ -33,12 +33,13 @@ def build(label):
     clfs = [
         ('et', sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed)),
         ('lr', sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed)),
+        ('bnb', sklearn.naive_bayes.BernoulliNB()),
         ('mnb', sklearn.naive_bayes.MultinomialNB()),
         ('rf', sklearn.ensemble.RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed)),
         ('xgb', xgboost.XGBClassifier(seed=util.seed))
     ]
 
-    clf = sklearn.ensemble.VotingClassifier(clfs, voting='soft', n_jobs=-1)
+    clf = sklearn.ensemble.VotingClassifier(clfs, voting='soft')
     clf.fit(X_train, y_train)
 
     val_acc = clf.score(X_val, y_val)
@@ -48,7 +49,7 @@ def build(label):
 
 
 def run():
-    print("Voting Ensemble (soft) with 5 models")
+    print("Voting Ensemble (soft) with 6 models")
     util.init_random()
 
     clf_age, acc_age = build('age')
@@ -58,10 +59,10 @@ def run():
     acc_final = (acc_age + acc_gender + acc_education) / 3
     print('acc_final:', acc_final)
 
-    X_test, test_id = feature.bow.build_test_set()
+    X_test = feature.bow.build_test_set()
 
     pred_age = clf_age.predict(X_test)
     pred_gender = clf_gender.predict(X_test)
     pred_education = clf_education.predict(X_test)
 
-    submissions.save_csv(test_id, pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))
+    submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))

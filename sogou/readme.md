@@ -10,13 +10,14 @@
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
-Extra Trees|0.527226463104|0.787538304392|0.564809707667|0.626524825054|/
-Logistic Regression|0.561832061069|0.779877425945|0.583011583012|0.641573690008|0.6485
-Multinomial Naive Bayes|0.53893129771|0.779877425945|0.564258135687|0.627688953114|/
-Random Forest|0.517048346056|0.787538304392|0.553778268064|0.619454972837|/
-Support Vector Machine|0.514503816794|0.745658835546|0.544953116382|0.601705256241|/
-TextGrocery|0.542493638677|0.788049029622|0.560948703806|0.630497124035|/
-XGBoost|0.519083969466|0.758937691522|0.551571980143|0.609864547044|/
+Bernoulli Naive Bayes|0.541475826972|0.819203268641|0.507446221732|0.622708439115|/
+Extra Trees|0.533842239186|0.814606741573|0.569222283508|0.639223754756|/
+Logistic Regression|0.562849872774|0.801838610827|0.57584114727|0.64684321029|/
+Multinomial Naive Bayes|0.543511450382|0.805924412666|0.562603419746|0.637346427598|/
+Random Forest|0.526208651399|0.79315628192|0.568119139548|0.629161357623|/
+Support Vector Machine|0.558269720102|0.804392236977|0.57749586321|0.646719273429|/
+TextGrocery|0.541984732824|0.786516853933|0.564258135687|0.630919907481|/
+XGBoost|0.532315521628|0.768641470889|0.555984555985|0.618980516167|/
 
 ## 神经网络
 
@@ -24,19 +25,17 @@ XGBoost|0.519083969466|0.758937691522|0.551571980143|0.609864547044|/
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
-Convolution Neural Networks|0.537404580198|0.80132788505|0.575841147533|0.63819120426|/
-Fast Text (ngram=1)|0.561323155853|0.795709907887|0.59238830697|0.64980712357|0.6638
-Multi-Layer Perceptron|0.56234097047|0.791113380149|0.578599011543|0.644017787387|0.6506
-TextCNN|0.551145038744|0.805413687254|0.565361279943|0.64064000198|0.6551
+Fast Text (ngram=1)|0.58167938998|0.822778345737|0.597904026673|0.667453920797|/
+Multi-Layer Perceptron|0.574045797705|0.813585295193|0.587424156551|0.658351749816|/
 
 ## 集成学习
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
-Stacking Ensemble (Blend) using ExtraTrees with 5 models (ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.563867684478|0.782431052094|0.606177606178|0.650825447583|0.6633
-Stacking Ensemble (Blend) using Logistic Regression with 6 models (ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost, Multi-Layer Perceptron)|0.570992366412|0.795709908069|0.610590182019|0.6590974855|0.6718
-Voting Ensemble (hard) with 6 models (ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, Support Vector Machine, XGBoost)|0.538422391858|0.783452502554|0.595146166575|0.639007020329|/
-Voting Ensemble (soft) with 5 models (ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.547582697201|0.791624106231|0.580253723111|0.639820175514|/
+Stacking Ensemble (Blend) using ExtraTrees with 7 models (Bernoulli Naive Bayes, ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost, Multi-Layer Perceptron)|0.590330788804|0.819203268641|0.585217870932|0.664917309459|/
+Stacking Ensemble (Blend) using Logistic Regression with 7 models (Bernoulli Naive Bayes, ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost, Multi-Layer Perceptron)|0.598473282443|0.819203268641|0.601213458356|0.67296333648|0.6725
+Voting Ensemble (hard) with 7 models (Bernoulli Naive Bayes, ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, Support Vector Machine, XGBoost)|0.558269720102|0.819713993871|0.585769442912|0.654584385628|/
+Voting Ensemble (soft) with 6 models (Bernoulli Naive Bayes, ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.569974554707|0.819203268641|0.583563154992|0.657580326114|/
 
 PS: higher is better
 
