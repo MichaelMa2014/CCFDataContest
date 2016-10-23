@@ -13,6 +13,7 @@ import os
 import sklearn.ensemble
 import sklearn.linear_model
 import sklearn.naive_bayes
+import sklearn.neural_network
 import sklearn.svm
 import xgboost
 
@@ -32,10 +33,12 @@ def build(label):
 
     clfs = [
         ('et', sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed)),
+        ('rf', sklearn.ensemble.RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed)),
         ('lr', sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed)),
         ('bnb', sklearn.naive_bayes.BernoulliNB()),
         ('mnb', sklearn.naive_bayes.MultinomialNB()),
-        ('rf', sklearn.ensemble.RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed)),
+        ('mlp', sklearn.neural_network.MLPClassifier(hidden_layer_sizes=(100,), random_state=util.seed, verbose=True,
+                                                     early_stopping=True, validation_fraction=0.1)),
         ('svm', sklearn.svm.LinearSVC(C=0.1, random_state=util.seed)),
         ('xgb', xgboost.XGBClassifier(seed=util.seed))
     ]
@@ -50,7 +53,7 @@ def build(label):
 
 
 def run():
-    print("Voting Ensemble (hard) with 7 models")
+    print("Voting Ensemble (hard) with 8 models")
     util.init_random()
 
     clf_age, acc_age = build('age')

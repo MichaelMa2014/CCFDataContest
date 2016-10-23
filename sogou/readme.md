@@ -22,20 +22,21 @@ XGBoost|0.532315521628|0.768641470889|0.555984555985|0.618980516167|/
 ## 神经网络
 
 - [Keras](https://keras.io/)（后端采用[Theano](http://www.deeplearning.net/software/theano/)）【[中文文档](http://keras-cn.readthedocs.io/en/latest/)】
+- [scikit-learn](http://scikit-learn.org/)
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
 Fast Text (ngram=1)|0.58167938998|0.822778345737|0.597904026673|0.667453920797|/
 Multi-Layer Perceptron|0.574045797705|0.813585295193|0.587424156551|0.658351749816|/
+Multi-Layer Perceptron (scikit-learn)|0.573027989822|0.812563840654|0.585217870932|0.656936567136|/
 
 ## 集成学习
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
-Stacking Ensemble (Blend) using ExtraTrees with 7 models (Bernoulli Naive Bayes, ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost, Multi-Layer Perceptron)|0.590330788804|0.819203268641|0.585217870932|0.664917309459|/
-Stacking Ensemble (Blend) using Logistic Regression with 7 models (Bernoulli Naive Bayes, ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost, Multi-Layer Perceptron)|0.598473282443|0.819203268641|0.601213458356|0.67296333648|0.6725
-Voting Ensemble (hard) with 7 models (Bernoulli Naive Bayes, ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, Support Vector Machine, XGBoost)|0.558269720102|0.819713993871|0.585769442912|0.654584385628|/
-Voting Ensemble (soft) with 6 models (Bernoulli Naive Bayes, ExtraTrees, Logistic Regression, Multinomial Naive Bayes, Random Forest, XGBoost)|0.569974554707|0.819203268641|0.583563154992|0.657580326114|/
+Stacking Ensemble (Blend) with 8 models|0.6|0.821756894791|0.596800882515|0.672852592435|/
+Voting Ensemble (hard) with 8 models|0.565394402036|0.814606741573|0.589078874793|0.656360006134|/
+Voting Ensemble (soft) with 7 models|0.572010178117|0.817671092952|0.584114726972|0.657931999347|/
 
 PS: higher is better
 

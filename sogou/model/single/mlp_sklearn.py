@@ -26,8 +26,8 @@ def build(label):
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
 
-    clf = sklearn.neural_network.MLPClassifier(hidden_layer_sizes=(100,), verbose=True, early_stopping=True,
-                                               validation_fraction=0.1)
+    clf = sklearn.neural_network.MLPClassifier(hidden_layer_sizes=(100,), random_state=util.seed, verbose=True,
+                                               early_stopping=True, validation_fraction=0.1)
     clf.fit(X_train, y_train)
 
     val_acc = clf.score(X_val, y_val)

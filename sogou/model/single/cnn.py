@@ -23,7 +23,7 @@ import submissions
 import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
-param = {'batch_size': 128, 'age': 7, 'gender': 6, 'education':8}
+param = {'batch_size': 128, 'age': 8, 'gender': 6, 'education': 8}
 
 
 def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, with_weights=True, img_name=None):

@@ -91,17 +91,19 @@ def build_bow_clfs(label):
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=validation_split)
     X_test = feature.bow.build_test_set()
 
-    # 传统分类器
+    # scikit-learn分类器
     clfs = [
         (sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed), False),
+        (sklearn.ensemble.RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed), False),
         (sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed), False),
         (sklearn.naive_bayes.BernoulliNB(), False),
         (sklearn.naive_bayes.MultinomialNB(), False),
-        (sklearn.ensemble.RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed), False),
+        (sklearn.neural_network.MLPClassifier(hidden_layer_sizes=(100,), random_state=util.seed, verbose=True,
+                                              early_stopping=True, validation_fraction=0.1), False),
         (xgboost.XGBClassifier(seed=util.seed), False)
     ]
 
-    # 神经网络
+    # Keras神经网络
     param_base = {'input_dim': X_train.shape[1], 'output_dim': len(numpy.unique(y_train)) + 1, 'shuffle': True}
     param = {'mlp': {'batch_size': model.single.mlp.param['batch_size'], 'nb_epoch': model.single.mlp.param[label]}}
     for p in param:
@@ -115,7 +117,7 @@ def build_bow_clfs(label):
 
 def build_ngram_clfs(label, ngram=1):
     """
-    构建wv分类器
+    构建ngram分类器
     :param str|unicode label: 类别标签
     :param int ngram:
     """
@@ -198,7 +200,7 @@ def build_blend_and_pred(label):
 
 
 def run():
-    print('Stacking Ensemble (Blend) using Logistic Regression with 9 models')
+    print('Stacking Ensemble (Blend) with 10 models')
     util.init_random()
 
     acc_age, pred_age = build_blend_and_pred('age')
