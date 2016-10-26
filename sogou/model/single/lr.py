@@ -19,6 +19,10 @@ import util
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 
+def build_clf():
+    return sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed)
+
+
 def build(label):
     """
     构建分类器
@@ -26,7 +30,7 @@ def build(label):
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
 
-    clf = sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed)
+    clf = build_clf()
     clf.fit(X_train, y_train)
 
     val_acc = clf.score(X_val, y_val)

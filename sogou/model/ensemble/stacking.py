@@ -14,11 +14,7 @@ import keras.utils.np_utils
 import keras.wrappers.scikit_learn
 import numpy
 import sklearn.model_selection
-import sklearn.ensemble
 import sklearn.linear_model
-import sklearn.naive_bayes
-import sklearn.neural_network
-import xgboost
 
 import feature.bow
 import model.single
@@ -41,14 +37,13 @@ def build_blend_and_pred(label, X_test):
 
     skf = sklearn.model_selection.StratifiedKFold(n_folds, shuffle=True, random_state=util.seed)
     clfs = [
-        sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed),
-        sklearn.ensemble.RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed),
-        sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed),
-        sklearn.naive_bayes.BernoulliNB(),
-        sklearn.naive_bayes.MultinomialNB(),
-        sklearn.neural_network.MLPClassifier(hidden_layer_sizes=(100,), random_state=util.seed, verbose=True,
-                                             early_stopping=True, validation_fraction=0.1),
-        xgboost.XGBClassifier(seed=util.seed)
+        model.single.bnb.build_clf(),
+        model.single.et.build_clf(),
+        model.single.lr.build_clf(),
+        model.single.mlp_sklearn.build_clf(),
+        model.single.mnb.build_clf(),
+        model.single.rf.build_clf(),
+        model.single.xgb.build_clf()
     ]
 
     param_base = {'input_dim': X_train.shape[1], 'output_dim': cls_cnt + 1, 'shuffle': True}

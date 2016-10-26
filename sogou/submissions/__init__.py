@@ -19,12 +19,12 @@ import data
 
 def save_csv(pred_age, pred_gender, pred_education, file_name):
     """
-    :param list|numpy.ndarray ids: 测试集id
     :param list|numpy.ndarray pred_age: age预测值
     :param list|numpy.ndarray pred_gender: gender预测值
     :param list|numpy.ndarray pred_education: education预测值
     :param str|unicode file_name: 文件名
     """
-    pandas.DataFrame({'id': data.get_test_id(), 'age': pred_age, 'gender': pred_gender, 'education': pred_education}).to_csv(
+    pandas.DataFrame(
+        {'id': data.get_test_id(), 'age': pred_age, 'gender': pred_gender, 'education': pred_education}).to_csv(
         'submissions/%s' % file_name, sep=b' ', columns=['id', 'age', 'gender', 'education'], header=False, index=False,
         encoding=conf.ENCODING, quoting=csv.QUOTE_NONE)

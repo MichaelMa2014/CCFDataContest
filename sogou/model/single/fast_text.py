@@ -24,6 +24,7 @@ import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
 param = {'ngram': 1, 'batch_size': 128, 'age': 17, 'gender': 14, 'education': 24}
+# param = {'ngram': 2, 'batch_size': 128, 'age': 40, 'gender': 40, 'education': 40}
 
 
 def build_clf(input_dim, output_dim, max_feature, word_vec_dim=100, img_name=None):
@@ -60,8 +61,8 @@ def build(label):
                                                                                 ngram=param['ngram'])
 
     clf = build_clf(X_train.shape[1], y_train.shape[1], max_feature,
-                    img_name='image/{file_name}_{label}_ngram{ngram}.png'.format(file_name=_file_name, label=label,
-                                                                                 ngram=param['ngram']))
+                    img_name='image/{file_name}_{label}_{ngram}gram.png'.format(file_name=_file_name, label=label,
+                                                                                ngram=param['ngram']))
     history = clf.fit(X_train, y_train, batch_size=param['batch_size'], nb_epoch=param[label],
                       validation_data=(X_val, y_val), shuffle=True)
 
@@ -92,4 +93,4 @@ def run():
     pred_education = clf_education.predict_classes(X_test).flatten()
 
     submissions.save_csv(pred_age, pred_gender, pred_education,
-                         '{file_name}_ngram{ngram}.csv'.format(file_name=_file_name, ngram=param['ngram']))
+                         '{file_name}_{ngram}gram.csv'.format(file_name=_file_name, ngram=param['ngram']))

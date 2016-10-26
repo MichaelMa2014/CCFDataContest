@@ -11,13 +11,9 @@ from __future__ import with_statement
 import os
 
 import sklearn.ensemble
-import sklearn.linear_model
-import sklearn.naive_bayes
-import sklearn.neural_network
-import sklearn.svm
-import xgboost
 
 import feature.bow
+import model.single
 import submissions
 import util
 
@@ -32,15 +28,14 @@ def build(label):
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
 
     clfs = [
-        ('et', sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed)),
-        ('rf', sklearn.ensemble.RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed)),
-        ('lr', sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed)),
-        ('bnb', sklearn.naive_bayes.BernoulliNB()),
-        ('mnb', sklearn.naive_bayes.MultinomialNB()),
-        ('mlp', sklearn.neural_network.MLPClassifier(hidden_layer_sizes=(100,), random_state=util.seed, verbose=True,
-                                                     early_stopping=True, validation_fraction=0.1)),
-        ('svm', sklearn.svm.LinearSVC(C=0.1, random_state=util.seed)),
-        ('xgb', xgboost.XGBClassifier(seed=util.seed))
+        ('bnb', model.single.bnb.build_clf()),
+        ('et', model.single.et.build_clf()),
+        ('lr', model.single.lr.build_clf()),
+        ('mlp', model.single.mlp_sklearn.build_clf()),
+        ('mnb', model.single.mnb.build_clf()),
+        ('rf', model.single.rf.build_clf()),
+        ('svm', model.single.svm.build_clf()),
+        ('xgb', model.single.xgb.build_clf())
     ]
 
     clf = sklearn.ensemble.VotingClassifier(clfs, voting='hard')

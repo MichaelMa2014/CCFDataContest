@@ -115,7 +115,7 @@ def build_train_set(label, validation_split=0.0, dummy=False, ngram=1):
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_train_df_ngram{ngram}.hdf'.format(file_name=_file_name, ngram=ngram))
+    path = os.path.abspath('temp/{file_name}_train_df_{ngram}gram.hdf'.format(file_name=_file_name, ngram=ngram))
     if os.path.exists(path):
         train_df = pandas.read_hdf(path)
     else:
@@ -151,7 +151,7 @@ def build_test_set(ngram=1):
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_test_df_ngram{ngram}.hdf'.format(file_name=_file_name, ngram=ngram))
+    path = os.path.abspath('temp/{file_name}_test_df_{ngram}gram.hdf'.format(file_name=_file_name, ngram=ngram))
     if os.path.exists(path):
         test_df = pandas.read_hdf(path)
     else:

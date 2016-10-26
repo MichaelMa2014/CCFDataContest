@@ -93,14 +93,13 @@ def build_bow_clfs(label):
 
     # scikit-learn分类器
     clfs = [
-        (sklearn.ensemble.ExtraTreesClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed), False),
-        (sklearn.ensemble.RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=util.seed), False),
-        (sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed), False),
-        (sklearn.naive_bayes.BernoulliNB(), False),
-        (sklearn.naive_bayes.MultinomialNB(), False),
-        (sklearn.neural_network.MLPClassifier(hidden_layer_sizes=(100,), random_state=util.seed, verbose=True,
-                                              early_stopping=True, validation_fraction=0.1), False),
-        (xgboost.XGBClassifier(seed=util.seed), False)
+        (model.single.bnb.build_clf(), False),
+        (model.single.et.build_clf(), False),
+        (model.single.lr.build_clf(), False),
+        (model.single.mlp_sklearn.build_clf(), False),
+        (model.single.mnb.build_clf(), False),
+        (model.single.rf.build_clf(), False),
+        (model.single.xgb.build_clf(), False)
     ]
 
     # Keras神经网络
@@ -174,11 +173,11 @@ def build_blend_and_pred(label):
     ngram_data = build_ngram_clfs(label, ngram=1)
     wv_data = build_wv_clfs(label)
 
-    for num in range(5):
-        assert bow_data[num].shape == ngram_data[num].shape == wv_data[num].shape
-    blend_train = numpy.zeros(bow_data[0].shape[0], 0)
-    blend_val = numpy.zeros(bow_data[2].shape[0], 0)
-    blend_test = numpy.zeros(bow_data[4].shape[0], 0)
+    for num in (0, 2, 4):
+        assert bow_data[num].shape[0] == ngram_data[num].shape[0] == wv_data[num].shape[0]
+    blend_train = numpy.zeros((bow_data[0].shape[0], 0))
+    blend_val = numpy.zeros((bow_data[2].shape[0], 0))
+    blend_test = numpy.zeros((bow_data[4].shape[0], 0))
 
     for num in (1, 3):
         assert bow_data[num].tolist() == ngram_data[num].tolist() == wv_data[num].tolist()

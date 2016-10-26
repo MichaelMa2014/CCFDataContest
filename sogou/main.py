@@ -25,7 +25,7 @@ if __name__ == '__main__':
     # model.single.xgb.run()
 
     # model.single.fast_text.run()
-    model.single.cnn.run()
+    # model.single.cnn.run()
     # model.single.lstm.run()
     # model.single.mlp.run()
     # model.single.mlp_sklearn.run()

@@ -19,6 +19,11 @@ import util
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 
+def build_clf():
+    return sklearn.neural_network.MLPClassifier(hidden_layer_sizes=(100,), random_state=util.seed, verbose=True,
+                                                early_stopping=True, validation_fraction=0.1)
+
+
 def build(label):
     """
     构建分类器
@@ -26,8 +31,7 @@ def build(label):
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
 
-    clf = sklearn.neural_network.MLPClassifier(hidden_layer_sizes=(100,), random_state=util.seed, verbose=True,
-                                               early_stopping=True, validation_fraction=0.1)
+    clf = build_clf()
     clf.fit(X_train, y_train)
 
     val_acc = clf.score(X_val, y_val)
