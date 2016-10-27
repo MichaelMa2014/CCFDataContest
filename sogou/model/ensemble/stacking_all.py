@@ -185,8 +185,8 @@ def build_blend_and_pred(label):
 
     for sub_train, _, sub_val, _, sub_test in (bow_data, ngram_data, wv_data):
         blend_train = numpy.append(blend_train, sub_train, axis=1)
-        blend_val = numpy.append(blend_val, sub_train, axis=1)
-        blend_test = numpy.append(blend_test, sub_train, axis=1)
+        blend_val = numpy.append(blend_val, sub_val, axis=1)
+        blend_test = numpy.append(blend_test, sub_test, axis=1)
 
     blend_clf = sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed)
     blend_clf.fit(blend_train, y_train)
