@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 from __future__ import with_statement
 
 import conf
+import feature
 import model.ensemble
 import model.single
 
@@ -29,9 +30,9 @@ if __name__ == '__main__':
     # model.single.lstm.run()
     # model.single.mlp.run()
     # model.single.mlp_sklearn.run()
-    # model.single.text_cnn.run()
+    model.single.text_cnn.run()
 
     # model.ensemble.stacking.run()
-    model.ensemble.stacking_all.run()
+    # model.ensemble.stacking_all.run()
     # model.ensemble.voting_hard.run()
     # model.ensemble.voting_soft.run()

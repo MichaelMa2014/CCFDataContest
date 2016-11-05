@@ -44,18 +44,18 @@ def train_sub_clfs(X_train, y_train, X_val, X_test, clfs):
     cls_cnt = len(numpy.unique(y_train))
 
     clfs_cnt = len(clfs)
-    print('classifiers count:', clfs_cnt)
+    util.logger.info('classifiers count: {cnt}'.format(cnt=clfs_cnt))
 
     blend_train = numpy.zeros((X_train.shape[0], clfs_cnt * cls_cnt))
     blend_val = numpy.zeros((X_val.shape[0], clfs_cnt * cls_cnt))
     blend_test = numpy.zeros((X_test.shape[0], clfs_cnt * cls_cnt))
 
     for i, (clf, dummy) in enumerate(clfs):
-        print('classifier No.{i}:'.format(i=i + 1), clf)
+        util.logger.info('classifier No.{i}:'.format(i=i + 1), clf)
         idx = i * cls_cnt
 
         for j, (train_idx, test_idx) in enumerate(skf.split(X_train, y_train)):
-            print('fold:', j + 1)
+            util.logger.info('fold: {fold}',format(fold=j + 1))
 
             fold_X, fold_y = X_train[train_idx], y_train[train_idx]
             fold_test = X_train[test_idx]
@@ -87,7 +87,7 @@ def build_bow_clfs(label):
     构建bow分类器
     :param str|unicode label: 类别标签
     """
-    print('classifiers using bag-of-words')
+    util.logger.info('classifiers using bag-of-words')
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=validation_split)
     X_test = feature.bow.build_test_set()
 
@@ -120,7 +120,7 @@ def build_ngram_clfs(label, ngram=1):
     :param str|unicode label: 类别标签
     :param int ngram:
     """
-    print('classifiers using {ngram}-ngram'.format(ngram=ngram))
+    util.logger.info('classifiers using {ngram}-ngram'.format(ngram=ngram))
     X_train, y_train, X_val, y_val, max_feature = feature.ngram.build_train_set(label,
                                                                                 validation_split=validation_split,
                                                                                 ngram=ngram)
@@ -145,7 +145,7 @@ def build_wv_clfs(label):
     构建wv分类器
     :param str|unicode label: 类别标签
     """
-    print('classifiers using word2vec')
+    util.logger.info('classifiers using word2vec')
     X_train, y_train, X_val, y_val, max_feature = feature.wv.build_train_set(label, validation_split=validation_split)
     X_test = feature.wv.build_test_set()
 
@@ -192,14 +192,14 @@ def build_blend_and_pred(label):
     blend_clf.fit(blend_train, y_train)
 
     val_acc = blend_clf.score(blend_val, y_val)
-    print('val_acc:', val_acc)
+    util.logger.info('val_acc: {acc}'.format(acc=val_acc))
 
     pred = blend_clf.predict(blend_test)
     return val_acc, pred
 
 
 def run():
-    print('Stacking Ensemble (Blend) with 10 models')
+    util.logger.info('Stacking Ensemble (Blend) with 10 models')
     util.init_random()
 
     acc_age, pred_age = build_blend_and_pred('age')
@@ -207,6 +207,6 @@ def run():
     acc_education, pred_education = build_blend_and_pred('education')
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
-    print('acc_final:', acc_final)
+    util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
     submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))

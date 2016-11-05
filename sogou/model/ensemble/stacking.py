@@ -33,7 +33,7 @@ def build_blend_and_pred(label, X_test):
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
     cls_cnt = len(numpy.unique(numpy.append(y_train, y_val)))
-    print("classes count:", cls_cnt)
+    util.logger.info('classes count: {cnt}'.format(cnt=cls_cnt))
 
     skf = sklearn.model_selection.StratifiedKFold(n_folds, shuffle=True, random_state=util.seed)
     clfs = [
@@ -57,18 +57,18 @@ def build_blend_and_pred(label, X_test):
     ]
 
     clfs_cnt = len(clfs)
-    print("classifiers count:", clfs_cnt)
+    util.logger.info('classifiers count: {cnt}'.format(cnt=clfs_cnt))
 
     blend_train = numpy.zeros((X_train.shape[0], clfs_cnt * cls_cnt))
     blend_val = numpy.zeros((X_val.shape[0], clfs_cnt * cls_cnt))
     blend_test = numpy.zeros((X_test.shape[0], clfs_cnt * cls_cnt))
 
     for i, clf in enumerate(clfs):
-        print("classifier No.{i}:".format(i=i + 1), clf)
+        util.logger.info('classifier No.{i}:'.format(i=i + 1), clf)
         idx = i * cls_cnt
 
         for j, (train_idx, test_idx) in enumerate(skf.split(X_train, y_train)):
-            print("fold:", j + 1)
+            util.logger.info('fold: {fold}'.format(fold=j + 1))
 
             fold_X, fold_y = X_train[train_idx], y_train[train_idx]
             fold_test = X_train[test_idx]
@@ -97,14 +97,14 @@ def build_blend_and_pred(label, X_test):
     blend_clf.fit(blend_train, y_train)
 
     val_acc = blend_clf.score(blend_val, y_val)
-    print('val_acc:', val_acc)
+    util.logger.info('val_acc: {acc}'.format(acc=val_acc))
 
     pred = blend_clf.predict(blend_test)
     return val_acc, pred
 
 
 def run():
-    print("Stacking Ensemble (Blend) with 8 models")
+    util.logger.info('Stacking Ensemble (Blend) with 8 models')
     util.init_random()
 
     X_test = feature.bow.build_test_set()
@@ -114,6 +114,6 @@ def run():
     acc_education, pred_education = build_blend_and_pred('education', X_test)
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
-    print('acc_final:', acc_final)
+    util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
     submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))

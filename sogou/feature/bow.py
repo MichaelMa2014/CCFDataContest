@@ -30,7 +30,7 @@ def transform(df):
     """
     vectorizer = feature.build_vectorizer(df)
     vectors = vectorizer.transform(df['query']).toarray()
-    print('tf-idf vectors shape:', vectors.shape)
+    util.logger.info('tf-idf vectors shape: {shape}'.format(shape=vectors.shape))
 
     df.drop('query', axis=1, inplace=True)
     return df.join(pandas.DataFrame(vectors))
@@ -71,7 +71,7 @@ def build_train_set(label, validation_split=0.0, dummy=False):
     stratify = train_df[label].values
     train_df.drop(data.label_col, axis=1, inplace=True)
     target = keras.utils.np_utils.to_categorical(stratify) if dummy else stratify
-    print('train_df shape:', train_df.shape)
+    util.logger.info('train_df shape: {shape}'.format(shape=train_df.shape))
 
     if validation_split == 0.0:
         return train_df.values, target
@@ -99,5 +99,5 @@ def build_test_set():
         test_df = transform(test_df)
         test_df.to_hdf(path, 'train_df')
 
-    print('test_df shape:', test_df.shape)
+    util.logger.info('test_df shape: {shape}'.format(shape=test_df.shape))
     return test_df.values

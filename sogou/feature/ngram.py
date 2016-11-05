@@ -99,7 +99,7 @@ def transform(df, ngram):
     sequences = _build_ngram_sequences(sequences, ngram)
     sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=2000 * ngram, padding='post',
                                                            truncating='post')
-    print('sequences shape:', sequences.shape)
+    util.logger.info('sequences shape: {shape}'.format(shape=sequences.shape))
 
     df.drop('query', axis=1, inplace=True)
     return df.join(pandas.DataFrame(sequences.tolist()))
@@ -132,7 +132,7 @@ def build_train_set(label, validation_split=0.0, dummy=False, ngram=1):
     stratify = train_df[label].values
     train_df.drop(data.label_col, axis=1, inplace=True)
     target = keras.utils.np_utils.to_categorical(stratify) if dummy else stratify
-    print('train_df shape:', train_df.shape)
+    util.logger.info('train_df shape: {shape}'.format(shape=train_df.shape))
 
     if validation_split == 0.0:
         return train_df.values, target
@@ -161,5 +161,5 @@ def build_test_set(ngram=1):
         test_df = transform(test_df, ngram)
         test_df.to_hdf(path, 'train_df')
 
-    print('test_df shape:', test_df.shape)
+    util.logger.info('test_df shape: {shape}'.format(shape=test_df.shape))
     return test_df.values

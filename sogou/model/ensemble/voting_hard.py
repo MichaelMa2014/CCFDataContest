@@ -42,13 +42,13 @@ def build(label):
     clf.fit(X_train, y_train)
 
     val_acc = clf.score(X_val, y_val)
-    print('val_acc:', val_acc)
+    util.logger.info('val_acc: {acc}'.format(acc=val_acc))
 
     return clf, val_acc
 
 
 def run():
-    print("Voting Ensemble (hard) with 8 models")
+    util.logger.info('Voting Ensemble (hard) with 8 models')
     util.init_random()
 
     clf_age, acc_age = build('age')
@@ -56,7 +56,7 @@ def run():
     clf_education, acc_education = build('education')
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
-    print('acc_final:', acc_final)
+    util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
     X_test = feature.bow.build_test_set()
 

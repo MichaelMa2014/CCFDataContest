@@ -45,13 +45,13 @@ def build(label):
     clf.train(zip(y_train, X_train))
 
     val_acc = clf.test(zip(y_val, X_val)).accuracy_overall
-    print('val_acc:', val_acc)
+    util.logger.info('val_acc: {acc}'.format(acc=val_acc))
 
     return clf, val_acc
 
 
 def run():
-    print("TextGrocery")
+    util.logger.info('TextGrocery')
     util.init_random()
 
     clf_age, acc_age = build('age')
@@ -59,7 +59,7 @@ def run():
     clf_education, acc_education = build('education')
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
-    print('acc_final:', acc_final)
+    util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
     if not os.path.exists('temp'):
         os.mkdir('temp')

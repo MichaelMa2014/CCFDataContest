@@ -76,19 +76,48 @@ def build_word2vec_model(word_vec_dim):
     if os.path.exists(path):
         model = gensim.models.Word2Vec.load(path)
     else:
-        src_df = data.load_train_data()
-        text_df = pandas.DataFrame({'query': sum(src_df['query'].values, [])})
-        util.raw_to_texts(text_df, 'query', remove_stopwords=False)
-        print('text_df shape:', text_df.shape)
+        text_path = os.path.abspath('temp/text_df.hdf')
+        if os.path.exists(text_path):
+            text_df = pandas.read_hdf(text_path)
+        else:
+            src_df = data.load_train_data()
+            text_df = pandas.DataFrame({'query': sum(src_df['query'].values, [])})
+            util.raw_to_words(text_df, 'query', remove_stopwords=False)
+            text_df.to_hdf(text_path, 'text_df')
+        util.logger.info('text_df shape: {shape}'.format(shape=text_df.shape))
 
-        model = gensim.models.Word2Vec(text_df['query'], size=word_vec_dim, min_count=1, workers=1, seed=util.seed)
-        model.init_sims(replace=False)
+        assert word_vec_dim == 100 or word_vec_dim == 200 or word_vec_dim == 300
+        if word_vec_dim == 100:
+            # 100
+            # (log_accuracy) capital-common-countries: 6.4% (11/171)
+            # (log_accuracy) city-in-state: 52.0% (91/175)
+            # (log_accuracy) family: 47.7% (63/132)
+            # (log_accuracy) total: 34.5% (165/478)
+            model = gensim.models.Word2Vec(text_df['query'], size=word_vec_dim, min_count=1, sample=1e-4, workers=1,
+                                           seed=util.seed, iter=20)
+        else:
+            # 200
+            # (log_accuracy) capital-common-countries: 7.6% (13/171)
+            # (log_accuracy) city-in-state: 46.9% (82/175)
+            # (log_accuracy) family: 52.3% (69/132)
+            # (log_accuracy) total: 34.3% (164/478)
+
+            # 300
+            # (log_accuracy) capital-common-countries: 8.2% (14/171)
+            # (log_accuracy) city-in-state: 51.4% (90/175)
+            # (log_accuracy) family: 50.8% (67/132)
+            # (log_accuracy) total: 35.8% (171/478)
+            model = gensim.models.Word2Vec(text_df['query'], size=word_vec_dim, min_count=1, sample=1e-4, workers=1,
+                                           seed=util.seed, iter=15)
+        model.init_sims(replace=True)
         model.save(path)
 
+    # model.accuracy('data/word2vec_cn_accuracy.txt')
+    util.init_random()
     return model
 
 
-def build_weights_matrix(word_vec_dim=300):
+def build_weights_matrix(word_vec_dim):
     """
     根据词向量构建初始化权重矩阵
     :param int word_vec_dim:
@@ -96,8 +125,7 @@ def build_weights_matrix(word_vec_dim=300):
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
-    path = os.path.abspath(
-        'temp/weights_dim{dim}.npy'.format(dim=word_vec_dim))
+    path = os.path.abspath('temp/weights_dim{dim}.npy'.format(dim=word_vec_dim))
     if os.path.exists(path):
         weights = numpy.load(path)
     else:
@@ -113,7 +141,7 @@ def build_weights_matrix(word_vec_dim=300):
             else:
                 weights[index] = numpy.random.uniform(-0.25, 0.25, word_vec_dim)
 
-        print('word2vec_weights shape:', weights.shape)
+        util.logger.info('word2vec_weights shape: {shape}'.format(shape=weights.shape))
         numpy.save(path, weights)
 
     util.init_random()

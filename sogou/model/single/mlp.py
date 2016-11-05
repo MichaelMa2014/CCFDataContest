@@ -34,7 +34,7 @@ def build_clf(input_dim, output_dim, img_name=None):
     clf.add(keras.layers.Dense(output_dim, activation='softmax'))
 
     clf.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-    print(clf.summary())
+    clf.summary()
 
     if img_name:
         if not os.path.exists('image'):
@@ -56,13 +56,13 @@ def build(label):
                       validation_data=(X_val, y_val), shuffle=True)
 
     val_acc = history.history['val_acc'][-1]
-    print('val_acc:', val_acc)
+    util.logger.info('val_acc: {acc}'.format(acc=val_acc))
 
     return clf, val_acc
 
 
 def run():
-    print("Multi-Layer Perceptron")
+    util.logger.info('Multi-Layer Perceptron')
     util.init_random()
 
     clf_age, acc_age = build('age')
@@ -70,7 +70,7 @@ def run():
     clf_education, acc_education = build('education')
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
-    print('acc_final:', acc_final)
+    util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
     X_test = feature.bow.build_test_set()
 

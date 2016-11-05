@@ -24,7 +24,6 @@ import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
 param = {'ngram': 1, 'batch_size': 128, 'age': 17, 'gender': 14, 'education': 24}
-# param = {'ngram': 2, 'batch_size': 128, 'age': 40, 'gender': 40, 'education': 40}
 
 
 def build_clf(input_dim, output_dim, max_feature, word_vec_dim=100, img_name=None):
@@ -43,7 +42,7 @@ def build_clf(input_dim, output_dim, max_feature, word_vec_dim=100, img_name=Non
     clf.add(keras.layers.Dense(output_dim, activation='softmax'))
 
     clf.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-    print(clf.summary())
+    clf.summary()
 
     if img_name:
         if not os.path.exists('image'):
@@ -67,7 +66,7 @@ def build(label):
                       validation_data=(X_val, y_val), shuffle=True)
 
     val_acc = history.history['val_acc'][-1]
-    print('val_acc:', val_acc)
+    util.logger.info('val_acc: {acc}'.format(acc=val_acc))
 
     return clf, val_acc
 
@@ -76,7 +75,7 @@ def run():
     # TODO: 目前尚不能开启ngram>1，原因在于即使是ngram=2，max_feature也会爆炸到在8G内存下神经网络无法存放（Embedding层抛出MemoryError）
     assert param['ngram'] == 1
 
-    print("Fast Text")
+    util.logger.info('Fast Text')
     util.init_random()
 
     clf_age, acc_age = build('age')
@@ -84,7 +83,7 @@ def run():
     clf_education, acc_education = build('education')
 
     acc_final = (acc_age + acc_gender + acc_education) / 3
-    print('acc_final:', acc_final)
+    util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
     X_test = feature.ngram.build_test_set(ngram=param['ngram'])
 

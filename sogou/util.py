@@ -8,6 +8,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
+import logging
 import random
 import re
 
@@ -20,6 +21,11 @@ import pynlpir
 import data
 
 seed = 42
+
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s:%(msecs)05.1f pid:%(process)d [%(levelname)s] (%(funcName)s) %(message)s",
+                    datefmt="%Y-%m-%d %H:%M:%S")
+logger = logging.getLogger()
 
 
 def init_random():
