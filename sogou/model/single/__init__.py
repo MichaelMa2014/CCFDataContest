@@ -19,7 +19,5 @@ import model.single.xgb
 
 import model.single.cnn
 import model.single.fast_text
-import model.single.lstm
 import model.single.mlp
 import model.single.mlp_sklearn
-import model.single.text_cnn

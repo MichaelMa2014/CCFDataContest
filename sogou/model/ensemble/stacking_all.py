@@ -13,9 +13,9 @@ import os
 import keras.utils.np_utils
 import keras.wrappers.scikit_learn
 import numpy
-import sklearn.model_selection
 import sklearn.ensemble
 import sklearn.linear_model
+import sklearn.model_selection
 import sklearn.naive_bayes
 import xgboost
 
@@ -151,13 +151,10 @@ def build_wv_clfs(label):
 
     param_base = {'input_dim': X_train.shape[1], 'output_dim': len(numpy.unique(y_train)) + 1,
                   'max_feature': max_feature, 'shuffle': True}
-    param = {'cnn': {'batch_size': model.single.cnn.param['batch_size'], 'nb_epoch': model.single.cnn.param[label]},
-             'text_cnn': {'batch_size': model.single.text_cnn.param['batch_size'],
-                          'nb_epoch': model.single.text_cnn.param[label]}}
+    param = {'cnn': {'batch_size': model.single.cnn.param['batch_size'], 'nb_epoch': model.single.cnn.param[label]}}
     for p in param:
         param[p].update(param_base)
     clfs = [(keras.wrappers.scikit_learn.KerasClassifier(model.single.cnn.build_clf, **param['cnn']), True)]
-    # (keras.wrappers.scikit_learn.KerasClassifier(model.single.text_cnn.build_clf, **param['text_cnn']), True)]
 
     blend_train, blend_val, blend_test = train_sub_clfs(X_train, y_train, X_val, X_test, clfs)
 

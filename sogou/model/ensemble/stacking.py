@@ -13,8 +13,8 @@ import os
 import keras.utils.np_utils
 import keras.wrappers.scikit_learn
 import numpy
-import sklearn.model_selection
 import sklearn.linear_model
+import sklearn.model_selection
 
 import feature.bow
 import model.single

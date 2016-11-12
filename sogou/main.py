@@ -26,11 +26,9 @@ if __name__ == '__main__':
     # model.single.xgb.run()
 
     # model.single.fast_text.run()
-    # model.single.cnn.run()
-    # model.single.lstm.run()
+    model.single.cnn.run()
     # model.single.mlp.run()
     # model.single.mlp_sklearn.run()
-    model.single.text_cnn.run()
 
     # model.ensemble.stacking.run()
     # model.ensemble.stacking_all.run()

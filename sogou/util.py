@@ -40,27 +40,28 @@ def raw_to_words(df, feature, remove_stopwords=False, dictionary=None):
     :param bool remove_stopwords:
     :param tuple|list|set|dict dictionary:
     """
-    # 标点符号替换成空格
     filter_char = keras.preprocessing.text.base_filter()
-    df[feature] = df[feature].map(lambda stc: stc.translate({ord(c): ' ' for c in filter_char}))
-    # 去除首尾空白字符
-    df[feature] = df[feature].map(lambda stc: stc.strip())
-    # 根据空白字符切分
     blank_re = re.compile(r'\s+')
-    df[feature] = df[feature].map(blank_re.split)
-    # 过滤空字符串
-    df[feature] = df[feature].map(lambda wl: [w for w in wl if len(w)])
-    # 过滤纯数字
     digit_re = re.compile(r'^\d+$')
-    df[feature] = df[feature].map(lambda wl: filter(lambda w: not digit_re.match(w), wl))
-    # 英文变成小写
-    df[feature] = df[feature].map(lambda wl: [w.lower() for w in wl])
-    # 分词
-    df[feature] = df[feature].map(lambda wl: sum((pynlpir.segment(w, pos_tagging=False) for w in wl), []))
-    # 再次过滤空字符串
-    df[feature] = df[feature].map(lambda wl: [w for w in wl if len(w)])
-    # 再次过滤纯数字
-    df[feature] = df[feature].map(lambda wl: filter(lambda w: not digit_re.match(w), wl))
+    df[feature] = (df[feature]
+                   # 标点符号替换成空格
+                   .map(lambda stc: stc.translate({ord(c): ' ' for c in filter_char}))
+                   # 去除首尾空白字符
+                   .map(lambda stc: stc.strip())
+                   # 根据空白字符切分
+                   .map(blank_re.split)
+                   # 过滤空字符串
+                   .map(lambda wl: [w for w in wl if len(w)])
+                   # 过滤纯数字
+                   .map(lambda wl: filter(lambda w: not digit_re.match(w), wl))
+                   # 英文变成小写
+                   .map(lambda wl: [w.lower() for w in wl])
+                   # 分词
+                   .map(lambda wl: sum((pynlpir.segment(w, pos_tagging=False) for w in wl), []))
+                   # 再次过滤空字符串
+                   .map(lambda wl: [w for w in wl if len(w)])
+                   # 再次过滤纯数字
+                   .map(lambda wl: filter(lambda w: not digit_re.match(w), wl)))
     # 去除停止词
     if remove_stopwords:
         df[feature] = df[feature].map(lambda wl: filter(lambda w: w not in data.stopwords, wl))
