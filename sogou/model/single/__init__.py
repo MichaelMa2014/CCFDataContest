@@ -14,7 +14,10 @@ import model.single.lr
 import model.single.mnb
 import model.single.rf
 import model.single.svm
-import model.single.tg
+try:
+    import model.single.tg
+except ImportError:
+    pass
 import model.single.xgb
 
 import model.single.cnn
