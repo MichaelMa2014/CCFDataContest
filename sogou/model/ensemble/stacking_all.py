@@ -13,11 +13,8 @@ import os
 import keras.utils.np_utils
 import keras.wrappers.scikit_learn
 import numpy
-import sklearn.ensemble
 import sklearn.linear_model
 import sklearn.model_selection
-import sklearn.naive_bayes
-import xgboost
 
 import feature.bow
 import feature.ngram
@@ -51,11 +48,11 @@ def train_sub_clfs(X_train, y_train, X_val, X_test, clfs):
     blend_test = numpy.zeros((X_test.shape[0], clfs_cnt * cls_cnt))
 
     for i, (clf, dummy) in enumerate(clfs):
-        util.logger.info('classifier No.{i}:'.format(i=i + 1), clf)
+        util.logger.info('classifier No.{i}: {clf}'.format(i=i + 1, clf=clf))
         idx = i * cls_cnt
 
         for j, (train_idx, test_idx) in enumerate(skf.split(X_train, y_train)):
-            util.logger.info('fold: {fold}',format(fold=j + 1))
+            util.logger.info('fold: {fold}'.format(fold=j + 1))
 
             fold_X, fold_y = X_train[train_idx], y_train[train_idx]
             fold_test = X_train[test_idx]

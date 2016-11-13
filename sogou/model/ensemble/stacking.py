@@ -64,7 +64,7 @@ def build_blend_and_pred(label, X_test):
     blend_test = numpy.zeros((X_test.shape[0], clfs_cnt * cls_cnt))
 
     for i, clf in enumerate(clfs):
-        util.logger.info('classifier No.{i}:'.format(i=i + 1), clf)
+        util.logger.info('classifier No.{i}: {clf}'.format(i=i + 1, clf=clf))
         idx = i * cls_cnt
 
         for j, (train_idx, test_idx) in enumerate(skf.split(X_train, y_train)):
