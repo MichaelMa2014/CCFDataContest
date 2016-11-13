@@ -35,15 +35,13 @@ def load_train_data():
     读入训练集数据
     :rtype: pandas.DataFrame
     """
-    data = {
-        'age': [],
-        'gender': [],
-        'education': [],
-        'query': []
-    }
+    data = {}
+    for col in ('id', 'age', 'gender', 'education', 'query'):
+        data[col] = []
     with codecs.open(_train_path, encoding=conf.ENCODING) as train_file:
         for line in train_file:
             array = line.split('\t')
+            data['id'].append(array[0])
             data['age'].append(int(array[1]))
             data['gender'].append(int(array[2]))
             data['education'].append(int(array[3]))
@@ -56,10 +54,9 @@ def load_test_data():
     读入测试集数据
     :rtype: pandas.DataFrame
     """
-    data = {
-        'id': [],
-        'query': []
-    }
+    data = {}
+    for col in ('id', 'query'):
+        data[col] = []
     with codecs.open(_test_path, encoding=conf.ENCODING) as test_file:
         for line in test_file:
             array = line.split('\t')
@@ -86,4 +83,38 @@ def process_data(df, remove_stopwords):
     :param bool remove_stopwords:
     """
     df['query'] = df['query'].map(lambda l: ' '.join(l))
+    util.raw_to_texts(df, 'query', remove_stopwords)
+
+
+def load_split_train_data():
+    """
+    读入训练集数据并拆分
+    :rtype: pandas.DataFrame
+    """
+    df = load_train_data()
+    data = []
+    for idx, row in df.iterrows():
+        for query in row['query']:
+            data.append({'age': row['age'], 'gender': row['gender'], 'education': row['education'], 'query': query})
+    return pandas.DataFrame(data)
+
+
+def load_split_test_data():
+    """
+    读入测试集数据并拆分
+    :rtype: pandas.DataFrame
+    """
+    df = load_test_data()
+    data = []
+    for idx, row in df.iterrows():
+        for query in row['query']:
+            data.append({'id': row['id'], 'query': query})
+    return pandas.DataFrame(data)
+
+
+def process_split_data(df, remove_stopwords):
+    """
+    :param pandas.DataFrame df:
+    :param bool remove_stopwords:
+    """
     util.raw_to_texts(df, 'query', remove_stopwords)

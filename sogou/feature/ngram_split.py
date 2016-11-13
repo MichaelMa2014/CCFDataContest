@@ -97,7 +97,11 @@ def transform(df, ngram):
     tokenizer = feature.build_tokenizer(df)
     sequences = tokenizer.texts_to_sequences(line.encode('utf-8') for line in df['query'].values)
     sequences = _build_ngram_sequences(sequences, ngram)
-    sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=2000 * ngram, padding='post',
+    # print('mean:', numpy.mean([len(x) for x in sequences]))
+    # print('std:', numpy.std([len(x) for x in sequences]))
+    # print('median:', numpy.median([len(x) for x in sequences]))
+    # print('max:', numpy.max([len(x) for x in sequences]))
+    sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=150 * ngram, padding='post',
                                                            truncating='post')
     util.logger.info('sequences shape: {shape}'.format(shape=sequences.shape))
 
@@ -115,13 +119,12 @@ def build_train_set(label, validation_split=0.0, dummy=False, ngram=1):
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_train_df_{ngram}gram.hdf'.format(file_name=_file_name, ngram=ngram))
+    path = os.path.abspath('temp/{file_name}_split_train_df_{ngram}gram.hdf'.format(file_name=_file_name, ngram=ngram))
     if os.path.exists(path):
         train_df = pandas.read_hdf(path)
     else:
-        train_df = data.load_train_data()
-        train_df.drop('id', axis=1, inplace=True)
-        data.process_data(train_df, remove_stopwords=False)
+        train_df = data.load_split_train_data()
+        data.process_split_data(train_df, remove_stopwords=True)
         train_df = transform(train_df, ngram)
         train_df.to_hdf(path, 'train_df')
 
@@ -130,6 +133,9 @@ def build_train_set(label, validation_split=0.0, dummy=False, ngram=1):
     # 去掉label未知的数据
     train_df = train_df[train_df[label] > 0]
 
+    ids = train_df['id'].values
+    train_df.drop('id', axis=1, inplace=True)
+
     stratify = train_df[label].values
     train_df.drop(data.label_col, axis=1, inplace=True)
     target = keras.utils.np_utils.to_categorical(stratify) if dummy else stratify
@@ -137,11 +143,11 @@ def build_train_set(label, validation_split=0.0, dummy=False, ngram=1):
 
     if validation_split == 0.0:
         return train_df.values, target
-    X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(train_df.values, target,
-                                                                              test_size=validation_split,
-                                                                              random_state=util.seed,
-                                                                              stratify=stratify)
-    return X_train, y_train, X_val, y_val, max_feature
+    X_train, X_val, y_train, y_val, _, ids_val = sklearn.model_selection.train_test_split(train_df.values, target, ids,
+                                                                                          test_size=validation_split,
+                                                                                          random_state=util.seed,
+                                                                                          stratify=stratify)
+    return X_train, y_train, X_val, y_val, ids_val, max_feature
 
 
 def build_test_set(ngram=1):
@@ -152,15 +158,17 @@ def build_test_set(ngram=1):
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_test_df_{ngram}gram.hdf'.format(file_name=_file_name, ngram=ngram))
+    path = os.path.abspath('temp/{file_name}_split_test_df_{ngram}gram.hdf'.format(file_name=_file_name, ngram=ngram))
     if os.path.exists(path):
         test_df = pandas.read_hdf(path)
     else:
-        test_df = data.load_test_data()
-        test_df.drop('id', axis=1, inplace=True)
-        data.process_data(test_df, remove_stopwords=False)
+        test_df = data.load_split_test_data()
+        data.process_split_data(test_df, remove_stopwords=True)
         test_df = transform(test_df, ngram)
         test_df.to_hdf(path, 'train_df')
 
+    ids = test_df['id'].values
+    test_df.drop('id', axis=1, inplace=True)
+
     util.logger.info('test_df shape: {shape}'.format(shape=test_df.shape))
-    return test_df.values
+    return test_df.values, ids

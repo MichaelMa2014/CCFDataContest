@@ -52,6 +52,7 @@ def build_train_set(label, validation_split=0.0, dummy=False):
         train_df = pandas.read_hdf(path)
     else:
         train_df = data.load_train_data()
+        train_df.drop('id', axis=1, inplace=True)
         data.process_data(train_df, remove_stopwords=False)
         train_df = transform(train_df)
         train_df.to_hdf(path, 'train_df')
