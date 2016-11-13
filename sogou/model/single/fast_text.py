@@ -67,8 +67,8 @@ def build(label):
     earlystop = keras.callbacks.EarlyStopping(monitor='val_acc', patience=5)
     clf.fit(X_train, y_train, batch_size=param['batch_size'], nb_epoch=param[label], validation_data=(X_val, y_val),
             shuffle=True, callbacks=[checkpoint, earlystop])
-
     clf.load_weights(best_model_path)
+
     _, val_acc = clf.evaluate(X_val, y_val)
     util.logger.info('val_acc: {acc}'.format(acc=val_acc))
 

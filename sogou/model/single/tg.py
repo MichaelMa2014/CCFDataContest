@@ -33,6 +33,7 @@ def build(label):
         train_df = pandas.read_hdf(path)
     else:
         train_df = data.load_train_data()
+        train_df.drop('id', axis=1, inplace=True)
         data.process_data(train_df, remove_stopwords=True)
         train_df.to_hdf(path, 'train_df')
 
