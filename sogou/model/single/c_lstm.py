@@ -43,13 +43,8 @@ def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, with_weights
     clf.add(keras.layers.Embedding(input_dim=max_feature + 1, output_dim=word_vec_dim, input_length=input_dim,
                                    weights=weights))
 
-    clf.add(keras.layers.Convolution1D(nb_filter=200, filter_length=3, activation='relu'))
-    clf.add(keras.layers.Permute((2, 1)))
-    clf.add(keras.layers.Bidirectional(keras.layers.LSTM(output_dim=100, return_sequences=True)))
-    clf.add(keras.layers.GlobalMaxPooling1D())
-    clf.add(keras.layers.Dropout(0.5))
-
-    clf.add(keras.layers.Dense(128, activation='relu'))
+    clf.add(keras.layers.Convolution1D(nb_filter=300, filter_length=3, activation='relu'))
+    clf.add(keras.layers.LSTM(output_dim=300))
     clf.add(keras.layers.Dropout(0.5))
     clf.add(keras.layers.Dense(output_dim, activation='softmax'))
 
@@ -82,6 +77,7 @@ def build(label):
 
 
 def run():
+    util.logger.info('C-LSTM')
     util.init_random()
 
     clf_age, acc_age = build('age')

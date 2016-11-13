@@ -18,6 +18,7 @@ import model.single.tg
 import model.single.xgb
 
 import model.single.cnn
+import model.single.c_lstm
 import model.single.fast_text
 import model.single.mlp
 import model.single.mlp_sklearn

@@ -26,7 +26,7 @@ XGBoost|0.532315521628|0.768641470889|0.555984555985|0.618980516167|/
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
-Convolution Neural Networks|0.584732825064|0.821756895278|/|/|/
+Convolution Neural Networks|0.584732825064|0.821756895278|0.590733590931|0.665741103758|/
 Fast Text (ngram=1)|0.58167938998|0.822778345737|0.597904026673|0.667453920797|/
 Multi-Layer Perceptron|0.574045797705|0.813585295193|0.587424156551|0.658351749816|/
 Multi-Layer Perceptron (scikit-learn)|0.573027989822|0.812563840654|0.585217870932|0.656936567136|/
