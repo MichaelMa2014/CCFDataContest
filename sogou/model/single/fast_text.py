@@ -23,7 +23,7 @@ import submissions
 import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
-param = {'ngram': 1, 'batch_size': 128, 'age': 17, 'gender': 14, 'education': 24}
+param = {'ngram': 1, 'batch_size': 128, 'age': 40, 'gender': 40, 'education': 40}
 
 
 def build_clf(input_dim, output_dim, max_feature, word_vec_dim=100, img_name=None):
@@ -58,14 +58,18 @@ def build(label):
     """
     X_train, y_train, X_val, y_val, max_feature = feature.ngram.build_train_set(label, validation_split=0.1, dummy=True,
                                                                                 ngram=param['ngram'])
+    best_model_path = 'temp/{file_name}_best.hdf'.format(file_name=_file_name)
 
     clf = build_clf(X_train.shape[1], y_train.shape[1], max_feature,
                     img_name='image/{file_name}_{label}_{ngram}gram.png'.format(file_name=_file_name, label=label,
                                                                                 ngram=param['ngram']))
-    history = clf.fit(X_train, y_train, batch_size=param['batch_size'], nb_epoch=param[label],
-                      validation_data=(X_val, y_val), shuffle=True)
+    checkpoint = keras.callbacks.ModelCheckpoint(best_model_path, monitor='val_acc', save_best_only=True)
+    earlystop = keras.callbacks.EarlyStopping(monitor='val_acc', patience=5)
+    clf.fit(X_train, y_train, batch_size=param['batch_size'], nb_epoch=param[label], validation_data=(X_val, y_val),
+            shuffle=True, callbacks=[checkpoint, earlystop])
 
-    val_acc = history.history['val_acc'][-1]
+    clf.load_weights(best_model_path)
+    _, val_acc = clf.evaluate(X_val, y_val)
     util.logger.info('val_acc: {acc}'.format(acc=val_acc))
 
     return clf, val_acc

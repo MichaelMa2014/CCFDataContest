@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 from __future__ import with_statement
 
 import conf
-import feature
 import model.ensemble
 import model.single
 
