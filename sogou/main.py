@@ -25,12 +25,12 @@ if __name__ == '__main__':
     # model.single.xgb.run()
 
     # model.single.fast_text.run()
-    model.single.cnn.run()
+    # model.single.cnn.run()
     # model.single.c_lstm.run()
     # model.single.mlp.run()
     # model.single.mlp_sklearn.run()
 
     # model.ensemble.stacking.run()
-    # model.ensemble.stacking_all.run()
+    model.ensemble.stacking_all.run()
     # model.ensemble.voting_hard.run()
     # model.ensemble.voting_soft.run()

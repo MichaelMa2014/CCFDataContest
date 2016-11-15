@@ -30,12 +30,12 @@ def transform(df):
     :rtype: pandas.DataFrame
     """
     tokenizer = feature.build_tokenizer(df)
-    sequences = tokenizer.texts_to_sequences(line.encode('utf-8') for line in df['query'].values)
+    sequences = tokenizer.texts_to_sequences(line.encode('utf-8') for line in df['query'])
     sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=2000, padding='post', truncating='post')
     util.logger.info('sequences shape: {shape}'.format(shape=sequences.shape))
 
     df.drop('query', axis=1, inplace=True)
-    return df.join(pandas.DataFrame(sequences.tolist()))
+    return df.join(pandas.DataFrame(sequences))
 
 
 def build_train_set(label, validation_split=0.0, dummy=False):

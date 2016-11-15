@@ -165,19 +165,20 @@ def build_blend_and_pred(label):
     """
     bow_data = build_bow_clfs(label)
     ngram_data = build_ngram_clfs(label, ngram=1)
-    wv_data = build_wv_clfs(label)
+    # wv_data = build_wv_clfs(label)
 
     for num in (0, 2, 4):
-        assert bow_data[num].shape[0] == ngram_data[num].shape[0] == wv_data[num].shape[0]
+        assert bow_data[num].shape[0] == ngram_data[num].shape[0]# == wv_data[num].shape[0]
     blend_train = numpy.zeros((bow_data[0].shape[0], 0))
     blend_val = numpy.zeros((bow_data[2].shape[0], 0))
     blend_test = numpy.zeros((bow_data[4].shape[0], 0))
 
     for num in (1, 3):
-        assert bow_data[num].tolist() == ngram_data[num].tolist() == wv_data[num].tolist()
+        assert bow_data[num].tolist() == ngram_data[num].tolist()# == wv_data[num].tolist()
     y_train, y_val = bow_data[1], bow_data[3]
 
-    for sub_train, _, sub_val, _, sub_test in (bow_data, ngram_data, wv_data):
+    # for sub_train, _, sub_val, _, sub_test in (bow_data, ngram_data, wv_data):
+    for sub_train, _, sub_val, _, sub_test in (bow_data, ngram_data):
         blend_train = numpy.append(blend_train, sub_train, axis=1)
         blend_val = numpy.append(blend_val, sub_val, axis=1)
         blend_test = numpy.append(blend_test, sub_test, axis=1)
@@ -193,7 +194,8 @@ def build_blend_and_pred(label):
 
 
 def run():
-    util.logger.info('Stacking Ensemble (Blend) with 10 models')
+    util.logger.info('Stacking Ensemble (Blend) with 9 models')
+    # util.logger.info('Stacking Ensemble (Blend) with 10 models')
     util.init_random()
 
     acc_age, pred_age = build_blend_and_pred('age')

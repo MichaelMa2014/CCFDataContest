@@ -84,37 +84,3 @@ def process_data(df, remove_stopwords):
     """
     df['query'] = df['query'].map(lambda l: ' '.join(l))
     util.raw_to_texts(df, 'query', remove_stopwords)
-
-
-def load_split_train_data():
-    """
-    读入训练集数据并拆分
-    :rtype: pandas.DataFrame
-    """
-    df = load_train_data()
-    data = []
-    for idx, row in df.iterrows():
-        for query in row['query']:
-            data.append({'age': row['age'], 'gender': row['gender'], 'education': row['education'], 'query': query})
-    return pandas.DataFrame(data)
-
-
-def load_split_test_data():
-    """
-    读入测试集数据并拆分
-    :rtype: pandas.DataFrame
-    """
-    df = load_test_data()
-    data = []
-    for idx, row in df.iterrows():
-        for query in row['query']:
-            data.append({'id': row['id'], 'query': query})
-    return pandas.DataFrame(data)
-
-
-def process_split_data(df, remove_stopwords):
-    """
-    :param pandas.DataFrame df:
-    :param bool remove_stopwords:
-    """
-    util.raw_to_texts(df, 'query', remove_stopwords)

@@ -49,7 +49,9 @@ def build(label):
     :param str|unicode label: 类别标签
     """
     X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1, dummy=True)
-    best_model_path = 'temp/{file_name}_best.hdf'.format(file_name=_file_name)
+    if not os.path.exists('temp/{file_name}'.format(file_name=_file_name)):
+        os.mkdir('temp/{file_name}'.format(file_name=_file_name))
+    best_model_path = 'temp/{file_name}/{label}_best.hdf'.format(file_name=_file_name, label=label)
 
     clf = build_clf(X_train.shape[1], y_train.shape[1],
                     img_name='image/{file_name}_{label}.png'.format(file_name=_file_name, label=label))

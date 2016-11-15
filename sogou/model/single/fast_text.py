@@ -58,7 +58,9 @@ def build(label):
     """
     X_train, y_train, X_val, y_val, max_feature = feature.ngram.build_train_set(label, validation_split=0.1, dummy=True,
                                                                                 ngram=param['ngram'])
-    best_model_path = 'temp/{file_name}_best.hdf'.format(file_name=_file_name)
+    if not os.path.exists('temp/{file_name}'.format(file_name=_file_name)):
+        os.mkdir('temp/{file_name}'.format(file_name=_file_name))
+    best_model_path = 'temp/{file_name}/{label}_best.hdf'.format(file_name=_file_name, label=label)
 
     clf = build_clf(X_train.shape[1], y_train.shape[1], max_feature,
                     img_name='image/{file_name}_{label}_{ngram}gram.png'.format(file_name=_file_name, label=label,
