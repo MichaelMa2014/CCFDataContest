@@ -213,6 +213,6 @@ Temporary Items
 
 .idea/
 temp/
-sogou/data/user_tag_query.2W.*
+sogou/data/user_tag_query.*
 electricity/data/*.csv
 *.csv
