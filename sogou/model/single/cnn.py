@@ -26,7 +26,8 @@ _file_name = os.path.splitext(os.path.basename(__file__))[0]
 param = {'batch_size': 128, 'age': 15, 'gender': 15, 'education': 15}
 
 
-def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, with_weights=True, img_name=None):
+def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300,
+              with_weights=True, summary=True, img_name=None):
     """
     构建神经网络
     :param int input_dim: 输入维数
@@ -34,31 +35,40 @@ def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300, with_weights
     :param int max_feature: 最大特征值
     :param int word_vec_dim: 词向量维数
     :param bool with_weights: 初始化时是否引入词向量权重
+    :param bool summary: 是否输出网络结构
     :param str|unicode img_name: 图片名称
     :rtype: keras.models.Model
     """
-    weights = [feature.build_weights_matrix(word_vec_dim=word_vec_dim)] if with_weights else None
+    weights = [feature.build_weights_matrix(
+        word_vec_dim=word_vec_dim)] if with_weights else None
 
     input_tensor = keras.layers.Input(shape=(input_dim,))
-    embedded = keras.layers.Embedding(input_dim=max_feature + 1, output_dim=word_vec_dim, input_length=input_dim,
+    embedded = keras.layers.Embedding(input_dim=max_feature + 1,
+                                      output_dim=word_vec_dim,
+                                      input_length=input_dim,
                                       weights=weights)(input_tensor)
 
     tensors = []
     for filter_length in (2, 3, 4, 5):
-        tensor = keras.layers.Convolution1D(nb_filter=300, filter_length=filter_length, activation='relu')(embedded)
+        tensor = keras.layers.Convolution1D(nb_filter=300,
+                                            filter_length=filter_length,
+                                            activation='relu')(embedded)
         tensor = keras.layers.GlobalMaxPooling1D()(tensor)
         tensors.append(tensor)
 
     output_tensor = keras.layers.merge(tensors, mode='concat', concat_axis=1)
     output_tensor = keras.layers.Dropout(0.5)(output_tensor)
-    output_tensor = keras.layers.Dense(128, activation='relu')(output_tensor)
+    output_tensor = keras.layers.Dense(100, activation='relu')(output_tensor)
     output_tensor = keras.layers.Dropout(0.5)(output_tensor)
-    output_tensor = keras.layers.Dense(output_dim, activation='softmax')(output_tensor)
+    output_tensor = keras.layers.Dense(output_dim, activation='softmax')(
+        output_tensor)
 
     clf = keras.models.Model(input_tensor, output_tensor)
-    clf.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-    clf.summary()
+    clf.compile(optimizer='adam', loss='categorical_crossentropy',
+                metrics=['accuracy'])
 
+    if summary:
+        clf.summary()
     if img_name:
         if not os.path.exists('image'):
             os.mkdir('image')
@@ -71,17 +81,25 @@ def build(label):
     构建分类器
     :param str|unicode label: 类别标签
     """
-    X_train, y_train, X_val, y_val, max_feature = feature.wv.build_train_set(label, validation_split=0.1, dummy=True)
-    if not os.path.exists('temp/{file_name}'.format(file_name=_file_name)):
-        os.mkdir('temp/{file_name}'.format(file_name=_file_name))
-    best_model_path = 'temp/{file_name}/{label}_best.hdf'.format(file_name=_file_name, label=label)
+    X_train, y_train, X_val, y_val, max_feature = feature.wv.build_train(label,
+                                                                         validation_split=0.1,
+                                                                         dummy=True)
+    if not os.path.exists('temp/{file}'.format(file=_file_name)):
+        os.mkdir('temp/{file}'.format(file=_file_name))
+    best_model_path = 'temp/{file}/{label}_best.hdf'.format(file=_file_name,
+                                                            label=label)
 
     clf = build_clf(X_train.shape[1], y_train.shape[1], max_feature,
-                    img_name='image/{file_name}_{label}.png'.format(file_name=_file_name, label=label))
-    checkpoint = keras.callbacks.ModelCheckpoint(best_model_path, monitor='val_acc', save_best_only=True)
-    earlystop = keras.callbacks.EarlyStopping(monitor='val_acc', patience=5)
-    clf.fit(X_train, y_train, batch_size=param['batch_size'], nb_epoch=param[label], validation_data=(X_val, y_val),
-            shuffle=True, callbacks=[checkpoint, earlystop])
+                    img_name='image/{file}_{label}.png'.format(file=_file_name,
+                                                               label=label))
+    checkpoint = keras.callbacks.ModelCheckpoint(best_model_path,
+                                                 monitor='val_acc', verbose=1,
+                                                 save_best_only=True)
+    earlystop = keras.callbacks.EarlyStopping(monitor='val_acc', patience=5,
+                                              verbose=1)
+    clf.fit(X_train, y_train, batch_size=param['batch_size'],
+            nb_epoch=param[label], validation_data=(X_val, y_val), shuffle=True,
+            callbacks=[checkpoint, earlystop])
 
     clf.load_weights(best_model_path)
     _, val_acc = clf.evaluate(X_val, y_val)
@@ -101,10 +119,11 @@ def run():
     acc_final = (acc_age + acc_gender + acc_education) / 3
     util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
-    X_test = feature.wv.build_test_set()
+    X_test = feature.wv.build_test()
 
     pred_age = clf_age.predict(X_test).argmax(axis=-1).flatten()
     pred_gender = clf_gender.predict(X_test).argmax(axis=-1).flatten()
     pred_education = clf_education.predict(X_test).argmax(axis=-1).flatten()
 
-    submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))
+    submissions.save_csv(pred_age, pred_gender, pred_education,
+                         '{file}.csv'.format(file=_file_name))

@@ -7,5 +7,4 @@ pynlpir
 scipy
 sklearn
 theano
-tgrocery
 xgboost

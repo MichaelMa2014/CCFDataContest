@@ -20,8 +20,11 @@ _file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 
 def build_clf():
-    return sklearn.neural_network.MLPClassifier(hidden_layer_sizes=(100,), random_state=util.seed, verbose=True,
-                                                early_stopping=True, validation_fraction=0.1)
+    return sklearn.neural_network.MLPClassifier(hidden_layer_sizes=(200,),
+                                                random_state=util.seed,
+                                                verbose=True,
+                                                early_stopping=True,
+                                                validation_fraction=0.1)
 
 
 def build(label):
@@ -29,7 +32,8 @@ def build(label):
     构建分类器
     :param str|unicode label: 类别标签
     """
-    X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
+    X_train, y_train, X_val, y_val = feature.bow.build_train(label,
+                                                             validation_split=0.1)
 
     clf = build_clf()
     clf.fit(X_train, y_train)
@@ -51,10 +55,11 @@ def run():
     acc_final = (acc_age + acc_gender + acc_education) / 3
     util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
-    X_test = feature.bow.build_test_set()
+    X_test = feature.bow.build_test()
 
     pred_age = clf_age.predict(X_test)
     pred_gender = clf_gender.predict(X_test)
     pred_education = clf_education.predict(X_test)
 
-    submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))
+    submissions.save_csv(pred_age, pred_gender, pred_education,
+                         '{file}.csv'.format(file=_file_name))

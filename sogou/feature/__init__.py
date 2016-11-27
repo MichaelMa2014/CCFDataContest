@@ -13,7 +13,6 @@ import os
 import gensim
 import keras.preprocessing.text
 import numpy
-import pandas
 import sklearn.externals.joblib
 import sklearn.feature_extraction.text
 
@@ -21,47 +20,46 @@ import data
 import util
 
 
-def build_vectorizer(df=None):
+def build_vectorizer(rows=None):
     """
-    :param pandas.DataFrame df:
+    :param numpy.ndarray rows:
     :retype: sklearn.feature_extraction.text.TfidfVectorizer
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
     path = os.path.abspath('temp/vectorizer.model')
-    if os.path.exists(path):
-        vectorizer = sklearn.externals.joblib.load(path)
-    else:
-        if df is None:
-            df = data.load_train_data()
-            data.process_data(df, remove_stopwords=True)
+    if not os.path.exists(path):
+        if rows is None:
+            rows = data.load_train('query')
+            rows = data.process_data(rows, remove_stopwords=True)
 
-        vectorizer = sklearn.feature_extraction.text.TfidfVectorizer(stop_words=data.stopwords, max_features=8000)
-        vectorizer.fit(df['query'])
-        sklearn.externals.joblib.dump(vectorizer, path)
+        vectorizer = sklearn.feature_extraction.text.TfidfVectorizer(
+            stop_words=data.stopwords, max_features=8000)
+        vectorizer.fit(rows)
+        sklearn.externals.joblib.dump(vectorizer, path, compress=True)
 
+    vectorizer = sklearn.externals.joblib.load(path)
     return vectorizer
 
 
-def build_tokenizer(df=None):
+def build_tokenizer(rows=None):
     """
-    :param pandas.DataFrame df:
+    :param numpy.ndarray rows:
     :rtype: keras.preprocessing.text.Tokenizer
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
     path = os.path.abspath('temp/tokenizer.model')
-    if os.path.exists(path):
-        tokenizer = sklearn.externals.joblib.load(path)
-    else:
-        if df is None:
-            df = data.load_train_data()
-            data.process_data(df, remove_stopwords=False)
+    if not os.path.exists(path):
+        if rows is None:
+            rows = data.load_train('query')
+            rows = data.process_data(rows, remove_stopwords=True)
 
         tokenizer = keras.preprocessing.text.Tokenizer()
-        tokenizer.fit_on_texts(line.encode('utf-8') for line in df['query'])
-        sklearn.externals.joblib.dump(tokenizer, path)
+        tokenizer.fit_on_texts(line.encode('utf-8') for line in rows)
+        sklearn.externals.joblib.dump(tokenizer, path, compress=True)
 
+    tokenizer = sklearn.externals.joblib.load(path)
     return tokenizer
 
 
@@ -72,19 +70,17 @@ def build_word2vec_model(word_vec_dim):
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
-    path = os.path.abspath('temp/word2vec_dim{dim}.model'.format(dim=word_vec_dim))
-    if os.path.exists(path):
-        model = gensim.models.Word2Vec.load(path)
-    else:
+    path = os.path.abspath(
+        'temp/word2vec_dim{dim}.model'.format(dim=word_vec_dim))
+    if not os.path.exists(path):
         text_path = os.path.abspath('temp/text_df.hdf')
-        if os.path.exists(text_path):
-            text_df = pandas.read_hdf(text_path)
-        else:
-            src_df = data.load_train_data()
-            text_df = pandas.DataFrame({'query': sum(src_df['query'].values, [])})
-            util.raw_to_words(text_df, 'query', remove_stopwords=False)
-            text_df.to_hdf(text_path, 'text_df')
-        util.logger.info('text_df shape: {shape}'.format(shape=text_df.shape))
+        if not os.path.exists(text_path):
+            query_sum = data.load_train('query').sum()
+            util.rows_to_words(query_sum, remove_stopwords=False)
+            numpy.save(text_path, query_sum)
+
+        query_sum = numpy.load(text_path, mmap_mode='r+')
+        util.logger.info('text_df shape: {shape}'.format(shape=query_sum.shape))
 
         assert word_vec_dim == 100 or word_vec_dim == 200 or word_vec_dim == 300
         if word_vec_dim == 100:
@@ -93,7 +89,8 @@ def build_word2vec_model(word_vec_dim):
             # (log_accuracy) city-in-state: 52.0% (91/175)
             # (log_accuracy) family: 47.7% (63/132)
             # (log_accuracy) total: 34.5% (165/478)
-            model = gensim.models.Word2Vec(text_df['query'], size=word_vec_dim, min_count=1, sample=1e-4, workers=1,
+            model = gensim.models.Word2Vec(query_sum, size=word_vec_dim,
+                                           min_count=1, sample=1e-4, workers=1,
                                            seed=util.seed, iter=20)
         else:
             # 200
@@ -107,11 +104,13 @@ def build_word2vec_model(word_vec_dim):
             # (log_accuracy) city-in-state: 51.4% (90/175)
             # (log_accuracy) family: 50.8% (67/132)
             # (log_accuracy) total: 35.8% (171/478)
-            model = gensim.models.Word2Vec(text_df['query'], size=word_vec_dim, min_count=1, sample=1e-4, workers=1,
+            model = gensim.models.Word2Vec(query_sum, size=word_vec_dim,
+                                           min_count=1, sample=1e-4, workers=1,
                                            seed=util.seed, iter=15)
         model.init_sims(replace=True)
         model.save(path)
 
+    model = gensim.models.Word2Vec.load(path)
     # model.accuracy('data/word2vec_cn_accuracy.txt')
     util.init_random()
     return model
@@ -126,9 +125,7 @@ def build_weights_matrix(word_vec_dim):
     if not os.path.exists('temp'):
         os.mkdir('temp')
     path = os.path.abspath('temp/weights_dim{dim}.npy'.format(dim=word_vec_dim))
-    if os.path.exists(path):
-        weights = numpy.load(path)
-    else:
+    if not os.path.exists(path):
         word2vec = build_word2vec_model(word_vec_dim)
 
         tokenizer = build_tokenizer()
@@ -141,8 +138,12 @@ def build_weights_matrix(word_vec_dim):
             else:
                 weights[index] = numpy.random.uniform(-0.25, 0.25, word_vec_dim)
 
-        util.logger.info('word2vec_weights shape: {shape}'.format(shape=weights.shape))
+        util.logger.info(
+            'word2vec_weights shape: {shape}'.format(shape=weights.shape))
         numpy.save(path, weights)
+        del tokenizer
+        del weights
 
+    weights = numpy.load(path, mmap_mode='r+')
     util.init_random()
     return weights

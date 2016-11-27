@@ -10,6 +10,7 @@ from __future__ import with_statement
 
 import os
 
+import keras.callbacks
 import keras.utils.np_utils
 import keras.wrappers.scikit_learn
 import numpy
@@ -26,10 +27,11 @@ import util
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
 validation_split = 0.1  # 验证集比例，如果为0.0则不返回验证集
 n_folds = 5
-skf = sklearn.model_selection.StratifiedKFold(n_folds, shuffle=True, random_state=util.seed)
+skf = sklearn.model_selection.StratifiedKFold(n_folds, shuffle=True,
+                                              random_state=util.seed)
 
 
-def train_sub_clfs(X_train, y_train, X_val, X_test, clfs):
+def train_sub_clfs(X_train, y_train, X_val, X_test, clfs, **kwargs):
     """
     训练子分类器
     :param numpy.ndarray X_train:
@@ -47,8 +49,13 @@ def train_sub_clfs(X_train, y_train, X_val, X_test, clfs):
     blend_val = numpy.zeros((X_val.shape[0], clfs_cnt * cls_cnt))
     blend_test = numpy.zeros((X_test.shape[0], clfs_cnt * cls_cnt))
 
-    for i, (clf, dummy) in enumerate(clfs):
-        util.logger.info('classifier No.{i}: {clf}'.format(i=i + 1, clf=clf))
+    for i, (clf_name, clf) in enumerate(clfs):
+        if isinstance(clf, keras.models.Model):
+            util.logger.info('classifier No.{i}:'.format(i=i + 1))
+            clf.summary()
+        else:
+            util.logger.info(
+                'classifier No.{i}: {clf}'.format(i=i + 1, clf=clf))
         idx = i * cls_cnt
 
         for j, (train_idx, test_idx) in enumerate(skf.split(X_train, y_train)):
@@ -57,15 +64,19 @@ def train_sub_clfs(X_train, y_train, X_val, X_test, clfs):
             fold_X, fold_y = X_train[train_idx], y_train[train_idx]
             fold_test = X_train[test_idx]
 
-            if dummy:
+            if isinstance(clf, keras.models.Model):
                 fold_y = keras.utils.np_utils.to_categorical(fold_y)
+                clf.load_weights(kwargs['base_clf_path'][clf_name])
+                clf.fit(fold_X, fold_y, kwargs['param'][clf_name])
+                clf.load_weights(kwargs['best_clf_path'][clf_name])
+            else:
+                clf.fit(fold_X, fold_y)
 
-            clf.fit(fold_X, fold_y)
             fold_pred = clf.predict_proba(fold_test)
             pred_val = clf.predict_proba(X_val)
             pred_test = clf.predict_proba(X_test)
 
-            if dummy:
+            if isinstance(clf, keras.models.Model):
                 fold_pred = numpy.delete(fold_pred, 0, axis=1)
                 pred_val = numpy.delete(pred_val, 0, axis=1)
                 pred_test = numpy.delete(pred_test, 0, axis=1)
@@ -85,29 +96,55 @@ def build_bow_clfs(label):
     :param str|unicode label: 类别标签
     """
     util.logger.info('classifiers using bag-of-words')
-    X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=validation_split)
-    X_test = feature.bow.build_test_set()
+    X_train, y_train, X_val, y_val = feature.bow.build_train(label,
+                                                             validation_split=validation_split)
+    X_test = feature.bow.build_test()
 
     # scikit-learn分类器
     clfs = [
-        (model.single.bnb.build_clf(), False),
-        (model.single.et.build_clf(), False),
-        (model.single.lr.build_clf(), False),
-        (model.single.mlp_sklearn.build_clf(), False),
-        (model.single.mnb.build_clf(), False),
-        (model.single.rf.build_clf(), False),
-        (model.single.xgb.build_clf(), False)
+        ('bnb', model.single.bnb.build_clf()),
+        ('et', model.single.et.build_clf()),
+        ('lr', model.single.lr.build_clf()),
+        ('mlp_sklearn', model.single.mlp_sklearn.build_clf()),
+        ('mnb', model.single.mnb.build_clf()),
+        ('rf', model.single.rf.build_clf()),
+        ('xgb', model.single.xgb.build_clf())
     ]
 
     # Keras神经网络
-    param_base = {'input_dim': X_train.shape[1], 'output_dim': len(numpy.unique(y_train)) + 1, 'shuffle': True}
-    param = {'mlp': {'batch_size': model.single.mlp.param['batch_size'], 'nb_epoch': model.single.mlp.param[label]}}
-    for p in param:
-        param[p].update(param_base)
-    clfs += [(keras.wrappers.scikit_learn.KerasClassifier(model.single.mlp.build_clf, **param['mlp']), True)]
+    param = {'mlp': {'batch_size': model.single.mlp.param['batch_size'],
+                     'nb_epoch': model.single.mlp.param[label]}}
+    base_clf_path = {}
+    best_clf_path = {}
+    if not os.path.exists('temp/{file}'.format(file=_file_name)):
+        os.mkdir('temp/{file}'.format(file=_file_name))
+    for c in param:
+        base_clf_path[c] = 'temp/{file}/{clf}_{label}_base.hdf'.format(
+            file=_file_name, clf=c, label=label)
+        best_clf_path[c] = 'temp/{file}/{clf}_{label}_best.hdf'.format(
+            file=_file_name, clf=c, label=label)
+        param[c]['shuffle'] = True
+        param[c]['validation_data'] = (
+            X_val, keras.utils.np_utils.to_categorical(y_val))
+        param[c]['callbacks'] = [
+            keras.callbacks.ModelCheckpoint(best_clf_path[c], monitor='val_acc',
+                                            save_best_only=True),
+            keras.callbacks.EarlyStopping(monitor='val_acc', patience=5)
+        ]
 
-    blend_train, blend_val, blend_test = train_sub_clfs(X_train, y_train, X_val, X_test, clfs)
+    param_build = {'input_dim': X_train.shape[1],
+                   'output_dim': len(numpy.unique(y_train)) + 1,
+                   'summary': False}
+    clfs += [('mlp', model.single.mlp.build_clf(**param_build))]
+    for clf_name, clf in [('mlp', model.single.mlp.build_clf(**param_build))]:
+        clf.save_weights(base_clf_path[clf_name])
+        clfs.append((clf_name, clf))
 
+    blend_train, blend_val, blend_test = train_sub_clfs(X_train, y_train, X_val,
+                                                        X_test, clfs,
+                                                        param=param,
+                                                        base_clf_path=base_clf_path,
+                                                        best_clf_path=best_clf_path)
     return blend_train, y_train, blend_val, y_val, blend_test
 
 
@@ -118,22 +155,45 @@ def build_ngram_clfs(label, ngram=1):
     :param int ngram:
     """
     util.logger.info('classifiers using {ngram}-ngram'.format(ngram=ngram))
-    X_train, y_train, X_val, y_val, max_feature = feature.ngram.build_train_set(label,
-                                                                                validation_split=validation_split,
-                                                                                ngram=ngram)
-    X_test = feature.ngram.build_test_set(ngram=ngram)
+    X_train, y_train, X_val, y_val, max_feature = feature.ngram.build_train(
+        label,
+        validation_split=validation_split,
+        ngram=ngram)
+    X_test = feature.ngram.build_test(ngram=ngram)
 
-    param_base = {'input_dim': X_train.shape[1], 'output_dim': len(numpy.unique(y_train)) + 1,
-                  'max_feature': max_feature, 'shuffle': True}
-    param = {'fast_text': {'batch_size': model.single.fast_text.param['batch_size'],
-                           'nb_epoch': model.single.fast_text.param[label]}}
-    for p in param:
-        param[p].update(param_base)
-    clfs = [
-        (keras.wrappers.scikit_learn.KerasClassifier(model.single.fast_text.build_clf, **param['fast_text']), True)]
+    param = {
+        'fast_text': {'batch_size': model.single.fast_text.param['batch_size'],
+                      'nb_epoch': model.single.fast_text.param[label]}}
+    base_clf_path = {}
+    best_clf_path = {}
+    if not os.path.exists('temp/{file}'.format(file=_file_name)):
+        os.mkdir('temp/{file}'.format(file=_file_name))
+    for c in param:
+        base_clf_path[c] = 'temp/{file}/{clf}_{label}_base.hdf'.format(
+            file=_file_name, clf=c, label=label)
+        best_clf_path[c] = 'temp/{file}/{clf}_{label}_best.hdf'.format(
+            file=_file_name, clf=c, label=label)
+        param[c]['shuffle'] = True
+        param[c]['validation_data'] = (
+            X_val, keras.utils.np_utils.to_categorical(y_val))
+        param[c]['callbacks'] = [
+            keras.callbacks.ModelCheckpoint(best_clf_path[c], monitor='val_acc',
+                                            save_best_only=True),
+            keras.callbacks.EarlyStopping(monitor='val_acc', patience=5)
+        ]
 
-    blend_train, blend_val, blend_test = train_sub_clfs(X_train, y_train, X_val, X_test, clfs)
+    param_build = {'input_dim': X_train.shape[1],
+                   'output_dim': len(numpy.unique(y_train)) + 1,
+                   'max_feature': max_feature, 'summary': False}
+    clfs = [('fast_text', model.single.fast_text.build_clf(**param_build))]
+    for clf_name, clf in clfs:
+        clf.save_weights(base_clf_path[clf_name])
 
+    blend_train, blend_val, blend_test = train_sub_clfs(X_train, y_train, X_val,
+                                                        X_test, clfs,
+                                                        param=param,
+                                                        base_clf_path=base_clf_path,
+                                                        best_clf_path=best_clf_path)
     return blend_train, y_train, blend_val, y_val, blend_test
 
 
@@ -143,18 +203,42 @@ def build_wv_clfs(label):
     :param str|unicode label: 类别标签
     """
     util.logger.info('classifiers using word2vec')
-    X_train, y_train, X_val, y_val, max_feature = feature.wv.build_train_set(label, validation_split=validation_split)
-    X_test = feature.wv.build_test_set()
+    X_train, y_train, X_val, y_val, max_feature = feature.wv.build_train(label,
+                                                                         validation_split=validation_split)
+    X_test = feature.wv.build_test()
 
-    param_base = {'input_dim': X_train.shape[1], 'output_dim': len(numpy.unique(y_train)) + 1,
-                  'max_feature': max_feature, 'shuffle': True}
-    param = {'cnn': {'batch_size': model.single.cnn.param['batch_size'], 'nb_epoch': model.single.cnn.param[label]}}
-    for p in param:
-        param[p].update(param_base)
-    clfs = [(keras.wrappers.scikit_learn.KerasClassifier(model.single.cnn.build_clf, **param['cnn']), True)]
+    param = {'cnn': {'batch_size': model.single.cnn.param['batch_size'],
+                     'nb_epoch': model.single.cnn.param[label]}}
+    base_clf_path = {}
+    best_clf_path = {}
+    if not os.path.exists('temp/{file}'.format(file=_file_name)):
+        os.mkdir('temp/{file}'.format(file=_file_name))
+    for c in param:
+        base_clf_path[c] = 'temp/{file}/{clf}_{label}_base.hdf'.format(
+            file=_file_name, clf=c, label=label)
+        best_clf_path[c] = 'temp/{file}/{clf}_{label}_best.hdf'.format(
+            file=_file_name, clf=c, label=label)
+        param[c]['shuffle'] = True
+        param[c]['validation_data'] = (
+            X_val, keras.utils.np_utils.to_categorical(y_val))
+        param[c]['callbacks'] = [
+            keras.callbacks.ModelCheckpoint(best_clf_path[c], monitor='val_acc',
+                                            save_best_only=True),
+            keras.callbacks.EarlyStopping(monitor='val_acc', patience=5)
+        ]
 
-    blend_train, blend_val, blend_test = train_sub_clfs(X_train, y_train, X_val, X_test, clfs)
+    param_build = {'input_dim': X_train.shape[1],
+                   'output_dim': len(numpy.unique(y_train)) + 1,
+                   'max_feature': max_feature, 'summary': False}
+    clfs = [('cnn', model.single.cnn.build_clf(**param_build))]
+    for clf_name, clf in clfs:
+        clf.save_weights(base_clf_path[clf_name])
 
+    blend_train, blend_val, blend_test = train_sub_clfs(X_train, y_train, X_val,
+                                                        X_test, clfs,
+                                                        param=param,
+                                                        base_clf_path=base_clf_path,
+                                                        best_clf_path=best_clf_path)
     return blend_train, y_train, blend_val, y_val, blend_test
 
 
@@ -163,18 +247,22 @@ def build_blend_and_pred(label):
     构建分类器
     :param str|unicode label: 类别标签
     """
+    if not os.path.exists('temp/{file}'.format(file=_file_name)):
+        os.mkdir('temp/{file}'.format(file=_file_name))
     bow_data = build_bow_clfs(label)
     ngram_data = build_ngram_clfs(label, ngram=1)
     # wv_data = build_wv_clfs(label)
 
     for num in (0, 2, 4):
-        assert bow_data[num].shape[0] == ngram_data[num].shape[0]# == wv_data[num].shape[0]
+        assert bow_data[num].shape[0] == ngram_data[num].shape[
+            0]  # == wv_data[num].shape[0]
     blend_train = numpy.zeros((bow_data[0].shape[0], 0))
     blend_val = numpy.zeros((bow_data[2].shape[0], 0))
     blend_test = numpy.zeros((bow_data[4].shape[0], 0))
 
     for num in (1, 3):
-        assert bow_data[num].tolist() == ngram_data[num].tolist()# == wv_data[num].tolist()
+        assert bow_data[num].tolist() == ngram_data[
+            num].tolist()  # == wv_data[num].tolist()
     y_train, y_val = bow_data[1], bow_data[3]
 
     # for sub_train, _, sub_val, _, sub_test in (bow_data, ngram_data, wv_data):
@@ -183,7 +271,8 @@ def build_blend_and_pred(label):
         blend_val = numpy.append(blend_val, sub_val, axis=1)
         blend_test = numpy.append(blend_test, sub_test, axis=1)
 
-    blend_clf = sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed)
+    blend_clf = sklearn.linear_model.LogisticRegression(n_jobs=-1,
+                                                        random_state=util.seed)
     blend_clf.fit(blend_train, y_train)
 
     val_acc = blend_clf.score(blend_val, y_val)
@@ -205,4 +294,5 @@ def run():
     acc_final = (acc_age + acc_gender + acc_education) / 3
     util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
-    submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))
+    submissions.save_csv(pred_age, pred_gender, pred_education,
+                         '{file}.csv'.format(file=_file_name))

@@ -25,7 +25,8 @@ def build(label):
     构建分类器
     :param str|unicode label: 类别标签
     """
-    X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
+    X_train, y_train, X_val, y_val = feature.bow.build_train(label,
+                                                             validation_split=0.1)
 
     clfs = [
         ('bnb', model.single.bnb.build_clf()),
@@ -57,10 +58,11 @@ def run():
     acc_final = (acc_age + acc_gender + acc_education) / 3
     util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
-    X_test = feature.bow.build_test_set()
+    X_test = feature.bow.build_test()
 
     pred_age = clf_age.predict(X_test)
     pred_gender = clf_gender.predict(X_test)
     pred_education = clf_education.predict(X_test)
 
-    submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))
+    submissions.save_csv(pred_age, pred_gender, pred_education,
+                         '{file}.csv'.format(file=_file_name))

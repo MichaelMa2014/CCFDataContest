@@ -13,7 +13,6 @@ import os
 import keras.preprocessing.sequence
 import keras.utils.np_utils
 import numpy
-import pandas
 import sklearn.model_selection
 
 import data
@@ -23,22 +22,24 @@ import util
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 
-def transform(df):
+def _transform(rows):
     """
     转化成序列矩阵
-    :param pandas.DataFrame df:
-    :rtype: pandas.DataFrame
+    :param numpy.ndarray rows:
+    :rtype: numpy.ndarray
     """
-    tokenizer = feature.build_tokenizer(df)
-    sequences = tokenizer.texts_to_sequences(line.encode('utf-8') for line in df['query'])
-    sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=2000, padding='post', truncating='post')
+    tokenizer = feature.build_tokenizer(rows)
+    sequences = tokenizer.texts_to_sequences(
+        line.encode('utf-8') for line in rows)
+    sequences = keras.preprocessing.sequence.pad_sequences(sequences,
+                                                           maxlen=2000,
+                                                           padding='post',
+                                                           truncating='post')
     util.logger.info('sequences shape: {shape}'.format(shape=sequences.shape))
-
-    df.drop('query', axis=1, inplace=True)
-    return df.join(pandas.DataFrame(sequences))
+    return sequences
 
 
-def build_train_set(label, validation_split=0.0, dummy=False):
+def build_train(label, validation_split=0.0, dummy=False):
     """
     处理训练集和验证集
     :param str|unicode label: 类别标签
@@ -47,51 +48,48 @@ def build_train_set(label, validation_split=0.0, dummy=False):
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_train_df.hdf'.format(file_name=_file_name))
-    if os.path.exists(path):
-        train_df = pandas.read_hdf(path)
-    else:
-        train_df = data.load_train_data()
-        train_df.drop('id', axis=1, inplace=True)
-        data.process_data(train_df, remove_stopwords=False)
-        train_df = transform(train_df)
-        train_df.to_hdf(path, 'train_df')
+    path = os.path.abspath('temp/{file}_train.npy'.format(file=_file_name))
+    if not os.path.exists(path):
+        query = data.load_train('query')
+        query = data.process_data(query, remove_stopwords=False)
+        query = _transform(query)
+        numpy.save(path, query)
 
-    max_feature = train_df.max().max()
+    query = numpy.load(path, mmap_mode='r+')
+
+    max_feature = query.max()
 
     # 去掉label未知的数据
-    train_df = train_df[train_df[label] > 0]
+    label_rows = data.load_train(label)
+    query = query[label_rows > 0]
 
-    stratify = train_df[label].values
-    train_df.drop(data.label_col, axis=1, inplace=True)
-    target = keras.utils.np_utils.to_categorical(stratify) if dummy else stratify
-    util.logger.info('train_df shape: {shape}'.format(shape=train_df.shape))
+    stratify = label_rows[label_rows > 0]
+    target = keras.utils.np_utils.to_categorical(
+        stratify) if dummy else stratify
+    util.logger.info('train_df shape: {shape}'.format(shape=query.shape))
 
     if validation_split == 0.0:
-        return train_df.values, target
-    X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(train_df.values, target,
-                                                                              test_size=validation_split,
-                                                                              random_state=util.seed,
-                                                                              stratify=stratify)
+        return query, target
+    X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(
+        query, target, test_size=validation_split, random_state=util.seed,
+        stratify=stratify)
     return X_train, y_train, X_val, y_val, max_feature
 
 
-def build_test_set():
+def build_test():
     """
     处理测试集
     :rtype: numpy.ndarray
     """
     if not os.path.exists('temp'):
         os.mkdir('temp')
-    path = os.path.abspath('temp/{file_name}_test_df.hdf'.format(file_name=_file_name))
-    if os.path.exists(path):
-        test_df = pandas.read_hdf(path)
-    else:
-        test_df = data.load_test_data()
-        test_df.drop('id', axis=1, inplace=True)
-        data.process_data(test_df, remove_stopwords=False)
-        test_df = transform(test_df)
-        test_df.to_hdf(path, 'train_df')
+    path = os.path.abspath('temp/{file}_test.npy'.format(file=_file_name))
+    if not os.path.exists(path):
+        query = data.load_test('query')
+        query = data.process_data(query, remove_stopwords=False)
+        query = _transform(query)
+        numpy.save(path, query)
 
-    util.logger.info('test_df shape: {shape}'.format(shape=test_df.shape))
-    return test_df.values
+    query = numpy.load(path, mmap_mode='r+')
+    util.logger.info('test_df shape: {shape}'.format(shape=query.shape))
+    return query

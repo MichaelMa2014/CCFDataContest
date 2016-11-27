@@ -15,7 +15,6 @@ import re
 import keras.preprocessing.sequence
 import keras.preprocessing.text
 import numpy
-import pandas
 import pynlpir
 
 import data
@@ -33,51 +32,60 @@ def init_random():
     numpy.random.seed(seed)
 
 
-def raw_to_words(df, feature, remove_stopwords=False, dictionary=None):
+def umap(func, data):
+    return numpy.frompyfunc(func, 1, 1)(data)
+
+
+def rows_to_words(rows, remove_stopwords=False, dictionary=None):
     """
-    :param pandas.DataFrame df:
-    :param str|unicode feature:
+    :param numpy.ndarray rows:
     :param bool remove_stopwords:
     :param tuple|list|set|dict dictionary:
+    :rtype: numpy.ndarray
     """
     filter_char = keras.preprocessing.text.base_filter()
     blank_re = re.compile(r'\s+')
     digit_re = re.compile(r'^\d+$')
-    df[feature] = (df[feature]
-                   # 标点符号替换成空格
-                   .map(lambda stc: stc.translate({ord(c): ' ' for c in filter_char}))
-                   # 去除首尾空白字符
-                   .map(lambda stc: stc.strip())
-                   # 根据空白字符切分
-                   .map(blank_re.split)
-                   # 过滤空字符串
-                   .map(lambda wl: [w for w in wl if len(w)])
-                   # 过滤纯数字
-                   .map(lambda wl: filter(lambda w: not digit_re.match(w), wl))
-                   # 英文变成小写
-                   .map(lambda wl: [w.lower() for w in wl])
-                   # 分词
-                   .map(lambda wl: sum((pynlpir.segment(w, pos_tagging=False) for w in wl), []))
-                   # 再次过滤空字符串
-                   .map(lambda wl: [w for w in wl if len(w)])
-                   # 再次过滤纯数字
-                   .map(lambda wl: filter(lambda w: not digit_re.match(w), wl)))
+
+    # 标点符号替换成空格
+    rows = umap(lambda stc: stc.translate({ord(c): ' ' for c in filter_char}),
+                rows)
+    # 去除首尾空白字符
+    rows = umap(lambda stc: stc.strip(), rows)
+    # 根据空白字符切分
+    rows = umap(blank_re.split, rows)
+    # 过滤空字符串
+    rows = umap(lambda wl: [w for w in wl if len(w)], rows)
+    # 过滤纯数字
+    rows = umap(lambda wl: filter(lambda w: not digit_re.match(w), wl), rows)
+    # 英文变成小写
+    rows = umap(lambda wl: [w.lower() for w in wl], rows)
+    # 分词
+    rows = umap(
+        lambda wl: sum((pynlpir.segment(w, pos_tagging=False) for w in wl), []),
+        rows)
+    # 再次过滤空字符串
+    rows = umap(lambda wl: [w for w in wl if len(w)], rows)
+    # 再次过滤纯数字
+    rows = umap(lambda wl: filter(lambda w: not digit_re.match(w), wl), rows)
     # 去除停止词
     if remove_stopwords:
-        df[feature] = df[feature].map(lambda wl: filter(lambda w: w not in data.stopwords, wl))
+        rows = umap(lambda wl: filter(lambda w: w not in data.stopwords, wl),
+                    rows)
     # 只保留词典中存在的词
     if dictionary:
         if isinstance(dictionary, (tuple, list)):
             dictionary = set(dictionary)
-        df[feature] = df[feature].map(lambda wl: filter(lambda w: w in dictionary, wl))
+        rows = umap(lambda wl: filter(lambda w: w in dictionary, wl), rows)
+    return rows
 
 
-def raw_to_texts(df, feature, remove_stopwords=False, dictionary=None):
+def rows_to_texts(rows, remove_stopwords=False, dictionary=None):
     """
-    :param pandas.DataFrame df:
-    :param str|unicode feature:
+    :param numpy.ndarray rows:
     :param bool remove_stopwords:
     :param tuple|list|set|dict dictionary:
+    :rtype: numpy.ndarray
     """
-    raw_to_words(df, feature, remove_stopwords, dictionary)
-    df[feature] = df[feature].map(lambda wl: ' '.join(wl))
+    rows = rows_to_words(rows, remove_stopwords, dictionary)
+    return umap(lambda wl: ' '.join(wl), rows)

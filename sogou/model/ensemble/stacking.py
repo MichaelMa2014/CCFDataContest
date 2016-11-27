@@ -10,6 +10,7 @@ from __future__ import with_statement
 
 import os
 
+import keras.callbacks
 import keras.utils.np_utils
 import keras.wrappers.scikit_learn
 import numpy
@@ -31,30 +32,48 @@ def build_blend_and_pred(label, X_test):
     :param str|unicode label: 类别标签
     :param numpy.ndarray X_test:
     """
-    X_train, y_train, X_val, y_val = feature.bow.build_train_set(label, validation_split=0.1)
+    X_train, y_train, X_val, y_val = feature.bow.build_train(label,
+                                                             validation_split=0.1)
     cls_cnt = len(numpy.unique(numpy.append(y_train, y_val)))
     util.logger.info('classes count: {cnt}'.format(cnt=cls_cnt))
 
-    skf = sklearn.model_selection.StratifiedKFold(n_folds, shuffle=True, random_state=util.seed)
+    skf = sklearn.model_selection.StratifiedKFold(n_folds, shuffle=True,
+                                                  random_state=util.seed)
     clfs = [
-        model.single.bnb.build_clf(),
-        model.single.et.build_clf(),
-        model.single.lr.build_clf(),
-        model.single.mlp_sklearn.build_clf(),
-        model.single.mnb.build_clf(),
-        model.single.rf.build_clf(),
-        model.single.xgb.build_clf()
+        ('bnb', model.single.bnb.build_clf()),
+        ('et', model.single.et.build_clf()),
+        ('lr', model.single.lr.build_clf()),
+        ('mlp_sklearn', model.single.mlp_sklearn.build_clf()),
+        ('mnb', model.single.mnb.build_clf()),
+        ('rf', model.single.rf.build_clf()),
+        ('xgb', model.single.xgb.build_clf())
     ]
 
-    param_base = {'input_dim': X_train.shape[1], 'output_dim': cls_cnt + 1, 'shuffle': True}
-    param = {
-        'mlp': {'batch_size': model.single.mlp.param['batch_size'], 'nb_epoch': model.single.mlp.param[label]}
-    }
+    param = {'mlp': {'batch_size': model.single.mlp.param['batch_size'],
+                     'nb_epoch': model.single.mlp.param[label]}}
+    base_clf_path = {}
+    best_clf_path = {}
+    if not os.path.exists('temp/{file}'.format(file=_file_name)):
+        os.mkdir('temp/{file}'.format(file=_file_name))
     for c in param:
-        param[c].update(param_base)
-    clfs += [
-        keras.wrappers.scikit_learn.KerasClassifier(model.single.mlp.build_clf, **param['mlp'])
-    ]
+        base_clf_path[c] = 'temp/{file}/{clf}_{label}_base.hdf'.format(
+            file=_file_name, clf=c, label=label)
+        best_clf_path[c] = 'temp/{file}/{clf}_{label}_best.hdf'.format(
+            file=_file_name, clf=c, label=label)
+        param[c]['shuffle'] = True
+        param[c]['validation_data'] = (
+            X_val, keras.utils.np_utils.to_categorical(y_val))
+        param[c]['callbacks'] = [
+            keras.callbacks.ModelCheckpoint(best_clf_path[c], monitor='val_acc',
+                                            save_best_only=True),
+            keras.callbacks.EarlyStopping(monitor='val_acc', patience=5)
+        ]
+
+    param_build = {'input_dim': X_train.shape[1], 'output_dim': cls_cnt + 1,
+                   'summary': False}
+    for clf_name, clf in [('mlp', model.single.mlp.build_clf(**param_build))]:
+        clf.save_weights(base_clf_path[clf_name])
+        clfs.append((clf_name, clf))
 
     clfs_cnt = len(clfs)
     util.logger.info('classifiers count: {cnt}'.format(cnt=clfs_cnt))
@@ -63,8 +82,13 @@ def build_blend_and_pred(label, X_test):
     blend_val = numpy.zeros((X_val.shape[0], clfs_cnt * cls_cnt))
     blend_test = numpy.zeros((X_test.shape[0], clfs_cnt * cls_cnt))
 
-    for i, clf in enumerate(clfs):
-        util.logger.info('classifier No.{i}: {clf}'.format(i=i + 1, clf=clf))
+    for i, (clf_name, clf) in enumerate(clfs):
+        if isinstance(clf, keras.models.Model):
+            util.logger.info('classifier No.{i}:'.format(i=i + 1))
+            clf.summary()
+        else:
+            util.logger.info(
+                'classifier No.{i}: {clf}'.format(i=i + 1, clf=clf))
         idx = i * cls_cnt
 
         for j, (train_idx, test_idx) in enumerate(skf.split(X_train, y_train)):
@@ -73,15 +97,19 @@ def build_blend_and_pred(label, X_test):
             fold_X, fold_y = X_train[train_idx], y_train[train_idx]
             fold_test = X_train[test_idx]
 
-            if isinstance(clf, keras.wrappers.scikit_learn.KerasClassifier):
+            if isinstance(clf, keras.models.Model):
                 fold_y = keras.utils.np_utils.to_categorical(fold_y)
+                clf.load_weights(base_clf_path[clf_name])
+                clf.fit(fold_X, fold_y, **param[clf_name])
+                clf.load_weights(best_clf_path[clf_name])
+            else:
+                clf.fit(fold_X, fold_y)
 
-            clf.fit(fold_X, fold_y)
             fold_pred = clf.predict_proba(fold_test)
             pred_val = clf.predict_proba(X_val)
             pred_test = clf.predict_proba(X_test)
 
-            if isinstance(clf, keras.wrappers.scikit_learn.KerasClassifier):
+            if isinstance(clf, keras.models.Model):
                 fold_pred = numpy.delete(fold_pred, 0, axis=1)
                 pred_val = numpy.delete(pred_val, 0, axis=1)
                 pred_test = numpy.delete(pred_test, 0, axis=1)
@@ -93,7 +121,8 @@ def build_blend_and_pred(label, X_test):
         blend_val[:, idx:idx + cls_cnt] /= clfs_cnt
         blend_test[:, idx:idx + cls_cnt] /= clfs_cnt
 
-    blend_clf = sklearn.linear_model.LogisticRegression(n_jobs=-1, random_state=util.seed)
+    blend_clf = sklearn.linear_model.LogisticRegression(n_jobs=-1,
+                                                        random_state=util.seed)
     blend_clf.fit(blend_train, y_train)
 
     val_acc = blend_clf.score(blend_val, y_val)
@@ -107,7 +136,7 @@ def run():
     util.logger.info('Stacking Ensemble (Blend) with 8 models')
     util.init_random()
 
-    X_test = feature.bow.build_test_set()
+    X_test = feature.bow.build_test()
 
     acc_age, pred_age = build_blend_and_pred('age', X_test)
     acc_gender, pred_gender = build_blend_and_pred('gender', X_test)
@@ -116,4 +145,5 @@ def run():
     acc_final = (acc_age + acc_gender + acc_education) / 3
     util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
-    submissions.save_csv(pred_age, pred_gender, pred_education, '{file_name}.csv'.format(file_name=_file_name))
+    submissions.save_csv(pred_age, pred_gender, pred_education,
+                         '{file}.csv'.format(file=_file_name))

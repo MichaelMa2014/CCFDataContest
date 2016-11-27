@@ -25,8 +25,10 @@ def save_csv(pred_age, pred_gender, pred_education, file_name):
     :param str|unicode file_name: 文件名
     """
     pandas.DataFrame(
-        {'id': data.get_test_id(), 'age': pred_age, 'gender': pred_gender, 'education': pred_education}).to_csv(
-        'submissions/%s' % file_name, sep=b' ', columns=['id', 'age', 'gender', 'education'], header=False, index=False,
+        {'id': data.load_test('id'), 'age': pred_age, 'gender': pred_gender,
+         'education': pred_education}).to_csv(
+        'submissions/{file}'.format(file=file_name), sep=b' ',
+        columns=['id', 'age', 'gender', 'education'], header=False, index=False,
         encoding=conf.ENCODING, quoting=csv.QUOTE_NONE)
 
 
@@ -35,5 +37,6 @@ def save_csv_by_df(pred_df, file_name):
     :param pandas.DataFrame pred_df: 预测值
     :param str|unicode file_name: 文件名
     """
-    pred_df.to_csv('submissions/%s' % file_name, sep=b' ', columns=['id', 'age', 'gender', 'education'], header=False,
+    pred_df.to_csv('submissions/{file}'.format(file=file_name), sep=b' ',
+                   columns=['id', 'age', 'gender', 'education'], header=False,
                    index=False, encoding=conf.ENCODING, quoting=csv.QUOTE_NONE)
