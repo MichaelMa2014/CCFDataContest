@@ -213,6 +213,5 @@ Temporary Items
 
 .idea/
 temp/
-sogou/data/user_tag_query.*
-electricity/data/*.csv
+data/user_tag_query.*
 *.csv
