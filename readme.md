@@ -24,7 +24,7 @@ XGBoost|0.537014439699|0.769136433316|0.569223985891|0.625124952969|/
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
 Convolution Neural Networks|/|/|/|/|/
-Fast Text (ngram=1) (old)|0.58429936954|0.821461420517|0.616622574956|0.674127788338|0.68878
+Fast Text (ngram=1)|0.585621313815|0.820950434314|0.620480599647|0.675684115925|0.6914
 Multi-Layer Perceptron|0.576774455981|0.814103219189|0.617504409171|0.66946069478|/
 Multi-Layer Perceptron (scikit-learn)|0.57240187106|0.815738375064|0.61364638448|0.667262210201|/
 
@@ -32,9 +32,9 @@ Multi-Layer Perceptron (scikit-learn)|0.57240187106|0.815738375064|0.61364638448
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
-Stacking Ensemble (Blend) with 8 models|/|/|/|/|/
-Voting Ensemble (hard) with 8 models|/|/|/|/|/
-Voting Ensemble (soft) with 7 models|/|/|/|/|/
+Stacking Ensemble (Blend) with 7 models|0.586536506|0.812979049566|0.612874779541|0.670796778369|/
+Voting Ensemble (hard) with 7 models|0.566503965833|0.812774655084|0.613756613757|0.664345078225|/
+Voting Ensemble (soft) with 6 models|0.572605247102|0.813387838528|0.611662257496|0.665885114375|/
 
 PS: higher is better
 
