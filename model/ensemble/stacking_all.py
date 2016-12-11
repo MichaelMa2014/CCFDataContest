@@ -67,7 +67,7 @@ def train_sub_clfs(X_train, y_train, X_val, X_test, clfs, **kwargs):
             if isinstance(clf, keras.models.Model):
                 fold_y = keras.utils.np_utils.to_categorical(fold_y)
                 clf.load_weights(kwargs['base_clf_path'][clf_name])
-                clf.fit(fold_X, fold_y, kwargs['param'][clf_name])
+                clf.fit(fold_X, fold_y, **kwargs['param'][clf_name])
                 clf.load_weights(kwargs['best_clf_path'][clf_name])
 
                 fold_pred = clf.predict(fold_test)
@@ -92,15 +92,16 @@ def train_sub_clfs(X_train, y_train, X_val, X_test, clfs, **kwargs):
     return blend_train, blend_val, blend_test
 
 
-def build_bow_clfs(label):
+def build_bow_clfs(label, sparse=True):
     """
     构建bow分类器
     :param str|unicode label: 类别标签
+    :param bool sparse:
     """
     util.logger.info('classifiers using bag-of-words')
     X_train, y_train, X_val, y_val = feature.bow.build_train(
-        label, validation_split=validation_split)
-    X_test = feature.bow.build_test()
+        label, validation_split=validation_split, sparse=sparse)
+    X_test = feature.bow.build_test(sparse=sparse)
 
     # scikit-learn分类器
     clfs = [
@@ -151,16 +152,17 @@ def build_bow_clfs(label):
     return blend_train, y_train, blend_val, y_val, blend_test
 
 
-def build_ngram_clfs(label, ngram=1):
+def build_ngram_clfs(label, ngram=1, sparse=True):
     """
     构建ngram分类器
     :param str|unicode label: 类别标签
     :param int ngram:
+    :param bool sparse:
     """
     util.logger.info('classifiers using {ngram}-ngram'.format(ngram=ngram))
     X_train, y_train, X_val, y_val, max_feature = feature.ngram.build_train(
-        label, validation_split=validation_split, ngram=ngram)
-    X_test = feature.ngram.build_test(ngram=ngram)
+        label, validation_split=validation_split, ngram=ngram, sparse=sparse)
+    X_test = feature.ngram.build_test(ngram=ngram, sparse=sparse)
 
     param = {
         'fast_text': {'batch_size': model.single.fast_text.param['batch_size'],
@@ -182,8 +184,9 @@ def build_ngram_clfs(label, ngram=1):
             X_val, keras.utils.np_utils.to_categorical(y_val))
         param[c]['callbacks'] = [
             keras.callbacks.ModelCheckpoint(best_clf_path[c], monitor='val_acc',
-                                            save_best_only=True),
-            keras.callbacks.EarlyStopping(monitor='val_acc', patience=5)
+                                            verbose=1, save_best_only=True),
+            keras.callbacks.EarlyStopping(monitor='val_acc', patience=5,
+                                          verbose=1)
         ]
 
     param_build = {'input_dim': X_train.shape[1],
@@ -199,15 +202,16 @@ def build_ngram_clfs(label, ngram=1):
     return blend_train, y_train, blend_val, y_val, blend_test
 
 
-def build_wv_clfs(label):
+def build_wv_clfs(label, sparse=True):
     """
     构建wv分类器
     :param str|unicode label: 类别标签
+    :param bool sparse:
     """
     util.logger.info('classifiers using word2vec')
     X_train, y_train, X_val, y_val, max_feature = feature.wv.build_train(
-        label, validation_split=validation_split)
-    X_test = feature.wv.build_test()
+        label, validation_split=validation_split, sparse=sparse)
+    X_test = feature.wv.build_test(sparse=sparse)
 
     param = {'cnn': {'batch_size': model.single.cnn.param['batch_size'],
                      'nb_epoch': model.single.cnn.param[label]}}
@@ -228,8 +232,9 @@ def build_wv_clfs(label):
             X_val, keras.utils.np_utils.to_categorical(y_val))
         param[c]['callbacks'] = [
             keras.callbacks.ModelCheckpoint(best_clf_path[c], monitor='val_acc',
-                                            save_best_only=True),
-            keras.callbacks.EarlyStopping(monitor='val_acc', patience=5)
+                                            verbose=1, save_best_only=True),
+            keras.callbacks.EarlyStopping(monitor='val_acc', patience=5,
+                                          verbose=1)
         ]
 
     param_build = {'input_dim': X_train.shape[1],
@@ -253,13 +258,13 @@ def build_blend_and_pred(label):
     dir_path = '{temp}/{file}'.format(temp=conf.TEMP_DIR, file=_file_name)
     if not os.path.exists(dir_path):
         os.mkdir(dir_path)
-    bow_data = build_bow_clfs(label)
-    ngram_data = build_ngram_clfs(label, ngram=1)
-    # wv_data = build_wv_clfs(label)
+    bow_data = build_bow_clfs(label, sparse=True)
+    ngram_data = build_ngram_clfs(label, ngram=1, sparse=False)
+    # wv_data = build_wv_clfs(label, sparse=False)
 
     for num in (0, 2, 4):
-        assert bow_data[num].shape[0] == ngram_data[num].shape[
-            0]  # == wv_data[num].shape[0]
+        assert bow_data[num].shape[0] == ngram_data[num].shape[0]
+        # == wv_data[num].shape[0]
     blend_train = numpy.zeros((bow_data[0].shape[0], 0))
     blend_val = numpy.zeros((bow_data[2].shape[0], 0))
     blend_test = numpy.zeros((bow_data[4].shape[0], 0))

@@ -8,8 +8,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
+import model.ensemble.mixture
 import model.ensemble.stacking
 import model.ensemble.stacking_all
 import model.ensemble.voting_hard
 import model.ensemble.voting_soft
-
