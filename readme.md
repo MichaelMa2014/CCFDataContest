@@ -32,6 +32,7 @@ Multi-Layer Perceptron (scikit-learn)|0.57240187106|0.815738375064|0.61364638448
 
 algorithm|validation age score|validation gender score|validation education score|validation final score|final score
 :-:|:-:|:-:|:-:|:-:|:-:
+Mixture|0.587655074232|0.820848237128|0.623456790123|0.677320033828|0.69172
 Stacking Ensemble (Blend) with 7 models|0.586536506|0.812979049566|0.612874779541|0.670796778369|/
 Stacking Ensemble (Blend) with 8 models|0.587655074232|0.820235053654|0.598655202822|0.668848443569|/
 Voting Ensemble (hard) with 7 models|0.566503965833|0.812774655084|0.613756613757|0.664345078225|/
