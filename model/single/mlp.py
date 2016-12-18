@@ -34,12 +34,12 @@ def build_clf(input_dim, output_dim, summary=True, img_name=None):
     """
     input_tensor = keras.layers.Input(shape=(input_dim,),
                                       sparse=param['sparse'])
-    tensor = keras.layers.Dense(200, activation='relu')(input_tensor)
-    tensor = keras.layers.Dropout(0.25)(tensor)
-    output_tensor = keras.layers.Dense(output_dim, activation='softmax')(tensor)
+    tensor = keras.layers.Dense(200, activation='relu')(input_tensor)  # tried sigmoid and tanh, not better
+    tensor = keras.layers.Dropout(0.25)(tensor)  # prevent over-fitting, each neuron has 25% probability to output 0
+    output_tensor = keras.layers.Dense(output_dim, activation='softmax')(tensor)  # max probability is result
     clf = keras.models.Model(input_tensor, output_tensor)
-    clf.compile(optimizer='adam', loss='categorical_crossentropy',
-                metrics=['accuracy'])
+    clf.compile(optimizer='adam', loss='categorical_crossentropy',  # gradient descent improved, best than others (adam, ada, adagram, sgd, rmsprop_for_rnn)
+                metrics=['accuracy'])  # loss (softmaxWithLoss)
 
     if summary:
         clf.summary()
@@ -68,11 +68,11 @@ def build(label):
                                                                label=label))
     checkpoint = keras.callbacks.ModelCheckpoint(best_model_path,
                                                  monitor='val_acc', verbose=1,
-                                                 save_best_only=True)
-    earlystop = keras.callbacks.EarlyStopping(monitor='val_acc', patience=5,
+                                                 save_best_only=True)  # stop at the best result
+    earlystop = keras.callbacks.EarlyStopping(monitor='val_acc', patience=5,  # 5 validations consecutive
                                               verbose=1)
-    clf.fit(X_train, y_train, batch_size=param['batch_size'],
-            nb_epoch=param[label], validation_data=(X_val, y_val), shuffle=True,
+    clf.fit(X_train, y_train, batch_size=param['batch_size'],  # batch instead of all
+            nb_epoch=param[label], validation_data=(X_val, y_val), shuffle=True,  # epoch is the max iteration
             callbacks=[checkpoint, earlystop])
 
     clf.load_weights(best_model_path)

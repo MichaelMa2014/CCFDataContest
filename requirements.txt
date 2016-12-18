@@ -3,7 +3,6 @@ jieba
 keras
 nltk
 numpy
-pandas
 scipy
 scikit-learn
 xgboost
