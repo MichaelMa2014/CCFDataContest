@@ -26,6 +26,7 @@ algorithm|validation age score|validation gender score|validation education scor
 Convolution Neural Networks|/|/|/|/|/
 Fast Text (ngram=1)|0.585621313815|0.820950434314|0.620480599647|0.675684115925|0.6914
 Multi-Layer Perceptron|0.576774455981|0.814103219189|0.617504409171|0.66946069478|/
+Multi-Layer Perceptron (mixture)|0.599322033905|0.829152542319|0.619774011272|0.682749529166|/
 Multi-Layer Perceptron (scikit-learn)|0.57240187106|0.815738375064|0.61364638448|0.667262210201|/
 
 ## 集成学习
