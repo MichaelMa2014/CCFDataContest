@@ -14,7 +14,7 @@ import keras
 import keras.utils.visualize_util
 
 import conf
-import feature.bow
+import feature.bow_mixture
 import submissions
 import util
 
