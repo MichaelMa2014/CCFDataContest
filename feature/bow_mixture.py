@@ -61,13 +61,13 @@ def build_train(validation_split=0.0, sparse=True):
 
     # 去掉label未知的数据
     label_rows = numpy.array(
-        [data.load_train(label) > 0 for label in data.label_col])
-    query = query[label_rows.all(axis=0)]
+        [data.load_train(label) for label in data.label_col]).transpose()
+    query = query[label_rows.all(axis=1)]
 
-    stratify = label_rows[label_rows.all(axis=0)]
+    stratify = label_rows[label_rows.all(axis=1)]
     target = []
     y_shape = []
-    for col in range(stratify.shape[0]):
+    for col in range(stratify.shape[1]):
         dummy = keras.utils.np_utils.to_categorical(stratify[:, col])
         target.append(dummy)
         y_shape.append(dummy.shape[1])
@@ -76,9 +76,11 @@ def build_train(validation_split=0.0, sparse=True):
 
     if validation_split == 0.0:
         return query, target
+    # X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(
+    #     query, target, test_size=validation_split, random_state=util.seed,
+    #     stratify=stratify)
     X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(
-        query, target, test_size=validation_split, random_state=util.seed,
-        stratify=stratify)
+        query, target, test_size=validation_split, random_state=util.seed)
     return X_train, y_train, X_val, y_val, y_shape
 
 

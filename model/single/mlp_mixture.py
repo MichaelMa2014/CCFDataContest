@@ -71,10 +71,9 @@ def build():
     clf = build_clf(X_train.shape[1], y_shape,
                     img_name='{img}/{file}.png'.format(img=conf.IMG_DIR,
                                                        file=_file_name))
-    checkpoint = keras.callbacks.ModelCheckpoint(best_model_path,
-                                                 monitor='val_acc', verbose=1,
+    checkpoint = keras.callbacks.ModelCheckpoint(best_model_path, verbose=1,
                                                  save_best_only=True)
-    earlystop = keras.callbacks.EarlyStopping(monitor='val_acc', patience=5,
+    earlystop = keras.callbacks.EarlyStopping(patience=5,
                                               verbose=1)
     clf.fit(X_train, y_train_split, batch_size=param['batch_size'],
             nb_epoch=param['nb_epoch'], validation_data=(X_val, y_val_split),
@@ -98,7 +97,7 @@ def run():
 
     clf = build()
 
-    X_test = feature.bow.build_test(sparse=param['sparse'])
+    X_test = feature.bow_mixture.build_test(sparse=param['sparse'])
 
     pred_age, pred_gender, pred_education = clf.predict(X_test)
     pred_age = pred_age.argmax(axis=-1).flatten()
