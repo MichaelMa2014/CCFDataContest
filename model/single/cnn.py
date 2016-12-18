@@ -49,19 +49,19 @@ def build_clf(input_dim, output_dim, max_feature, word_vec_dim=300,
     tensor = keras.layers.Embedding(input_dim=max_feature + 1,
                                     output_dim=word_vec_dim,
                                     input_length=input_dim,
-                                    weights=weights)(input_tensor)
+                                    weights=weights)(input_tensor)  # 2000 * 100 (dimension of word vectors)
 
     tensors = []
     for filter_length in (2, 3, 4, 5):
         sub_tensor = keras.layers.Convolution1D(nb_filter=300,
-                                                filter_length=filter_length,
+                                                filter_length=filter_length,  # 2 * 300, 3 * 300, 4 * 300, 5 * 300 (300 channels)
                                                 activation='relu')(tensor)
-        sub_tensor = keras.layers.GlobalMaxPooling1D()(sub_tensor)
-        tensors.append(sub_tensor)
+        sub_tensor = keras.layers.GlobalMaxPooling1D()(sub_tensor)  # 1999 * 300 to 1 * 300
+        tensors.append(sub_tensor)  # 1 * 300
 
-    tensor = keras.layers.merge(tensors, mode='concat', concat_axis=1)
+    tensor = keras.layers.merge(tensors, mode='concat', concat_axis=1)  # 1 * 1200
     tensor = keras.layers.Dropout(0.5)(tensor)
-    tensor = keras.layers.Dense(100, activation='relu')(tensor)
+    tensor = keras.layers.Dense(100, activation='relu')(tensor)  # hidden layer
     tensor = keras.layers.Dropout(0.5)(tensor)
     output_tensor = keras.layers.Dense(output_dim, activation='softmax')(tensor)
 
