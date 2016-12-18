@@ -18,7 +18,6 @@ import sklearn.model_selection
 
 import conf
 import feature.bow
-import feature.ngram
 import feature.wv
 import model.single
 import submissions
@@ -152,56 +151,6 @@ def build_bow_clfs(label, sparse=True):
     return blend_train, y_train, blend_val, y_val, blend_test
 
 
-def build_ngram_clfs(label, ngram=1, sparse=True):
-    """
-    构建ngram分类器
-    :param str|unicode label: 类别标签
-    :param int ngram:
-    :param bool sparse:
-    """
-    util.logger.info('classifiers using {ngram}-ngram'.format(ngram=ngram))
-    X_train, y_train, X_val, y_val, max_feature = feature.ngram.build_train(
-        label, validation_split=validation_split, ngram=ngram, sparse=sparse)
-    X_test = feature.ngram.build_test(ngram=ngram, sparse=sparse)
-
-    param = {
-        'fast_text': {'batch_size': model.single.fast_text.param['batch_size'],
-                      'nb_epoch': model.single.fast_text.param[label]}}
-    dir_path = '{temp}/{file}'.format(temp=conf.TEMP_DIR, file=_file_name)
-    if not os.path.exists(dir_path):
-        os.mkdir(dir_path)
-    base_clf_path = {}
-    best_clf_path = {}
-    for c in param:
-        base_clf_path[c] = '{dir}/{clf}_{label}_base.hdf'.format(dir=dir_path,
-                                                                 clf=c,
-                                                                 label=label)
-        best_clf_path[c] = '{dir}/{clf}_{label}_best.hdf'.format(dir=dir_path,
-                                                                 clf=c,
-                                                                 label=label)
-        param[c]['shuffle'] = True
-        param[c]['validation_data'] = (
-            X_val, keras.utils.np_utils.to_categorical(y_val))
-        param[c]['callbacks'] = [
-            keras.callbacks.ModelCheckpoint(best_clf_path[c], monitor='val_acc',
-                                            verbose=1, save_best_only=True),
-            keras.callbacks.EarlyStopping(monitor='val_acc', patience=5,
-                                          verbose=1)
-        ]
-
-    param_build = {'input_dim': X_train.shape[1],
-                   'output_dim': len(numpy.unique(y_train)) + 1,
-                   'max_feature': max_feature, 'summary': False}
-    clfs = [('fast_text', model.single.fast_text.build_clf(**param_build))]
-    for clf_name, clf in clfs:
-        clf.save_weights(base_clf_path[clf_name])
-
-    blend_train, blend_val, blend_test = train_sub_clfs(
-        X_train, y_train, X_val, X_test, clfs, param=param,
-        base_clf_path=base_clf_path, best_clf_path=best_clf_path)
-    return blend_train, y_train, blend_val, y_val, blend_test
-
-
 def build_wv_clfs(label, sparse=True):
     """
     构建wv分类器
@@ -213,8 +162,12 @@ def build_wv_clfs(label, sparse=True):
         label, validation_split=validation_split, sparse=sparse)
     X_test = feature.wv.build_test(sparse=sparse)
 
-    param = {'cnn': {'batch_size': model.single.cnn.param['batch_size'],
-                     'nb_epoch': model.single.cnn.param[label]}}
+    param = {
+        'cnn': {'batch_size': model.single.cnn.param['batch_size'],
+                'nb_epoch': model.single.cnn.param[label]},
+        'fast_text': {'batch_size': model.single.fast_text.param['batch_size'],
+                      'nb_epoch': model.single.fast_text.param[label]}
+    }
     dir_path = '{temp}/{file}'.format(temp=conf.TEMP_DIR, file=_file_name)
     if not os.path.exists(dir_path):
         os.mkdir(dir_path)
@@ -240,7 +193,10 @@ def build_wv_clfs(label, sparse=True):
     param_build = {'input_dim': X_train.shape[1],
                    'output_dim': len(numpy.unique(y_train)) + 1,
                    'max_feature': max_feature, 'summary': False}
-    clfs = [('cnn', model.single.cnn.build_clf(**param_build))]
+    clfs = [
+        # ('cnn', model.single.cnn.build_clf(**param_build)),
+        ('fast_text', model.single.fast_text.build_clf(**param_build))
+    ]
     for clf_name, clf in clfs:
         clf.save_weights(base_clf_path[clf_name])
 
@@ -259,23 +215,19 @@ def build_blend_and_pred(label):
     if not os.path.exists(dir_path):
         os.mkdir(dir_path)
     bow_data = build_bow_clfs(label, sparse=True)
-    ngram_data = build_ngram_clfs(label, ngram=1, sparse=False)
-    # wv_data = build_wv_clfs(label, sparse=False)
+    wv_data = build_wv_clfs(label, sparse=False)
 
     for num in (0, 2, 4):
-        assert bow_data[num].shape[0] == ngram_data[num].shape[0]
-        # == wv_data[num].shape[0]
+        assert bow_data[num].shape[0] == wv_data[num].shape[0]
     blend_train = numpy.zeros((bow_data[0].shape[0], 0))
     blend_val = numpy.zeros((bow_data[2].shape[0], 0))
     blend_test = numpy.zeros((bow_data[4].shape[0], 0))
 
     for num in (1, 3):
-        assert bow_data[num].tolist() == ngram_data[
-            num].tolist()  # == wv_data[num].tolist()
+        assert bow_data[num].tolist() == wv_data[num].tolist()
     y_train, y_val = bow_data[1], bow_data[3]
 
-    # for sub_train, _, sub_val, _, sub_test in (bow_data, ngram_data, wv_data):
-    for sub_train, _, sub_val, _, sub_test in (bow_data, ngram_data):
+    for sub_train, _, sub_val, _, sub_test in (bow_data, wv_data):
         blend_train = numpy.append(blend_train, sub_train, axis=1)
         blend_val = numpy.append(blend_val, sub_val, axis=1)
         blend_test = numpy.append(blend_test, sub_test, axis=1)

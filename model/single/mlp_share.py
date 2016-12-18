@@ -14,7 +14,7 @@ import keras
 import keras.utils.visualize_util
 
 import conf
-import feature.bow_mixture
+import feature.bow_share
 import submissions
 import util
 
@@ -22,11 +22,11 @@ _file_name = os.path.splitext(os.path.basename(__file__))[0]
 param = {'sparse': True, 'batch_size': 512, 'nb_epoch': 30}
 
 
-def build_clf(input_dim, output_dim, summary=True, img_name=None):
+def build_clf(input_dim, output_dims, summary=True, img_name=None):
     """
     构建神经网络
     :param int input_dim: 输入维数
-    :param list output_dim: 输出维数
+    :param list output_dims: 输出维数
     :param bool summary: 是否输出网络结构
     :param str|unicode img_name: 图片名称
     :rtype: keras.models.Sequential
@@ -36,7 +36,7 @@ def build_clf(input_dim, output_dim, summary=True, img_name=None):
     tensor = keras.layers.Dense(200, activation='relu')(input_tensor)
     tensor = keras.layers.Dropout(0.25)(tensor)
     output_tensors = []
-    for dim in output_dim:
+    for dim in output_dims:
         output_tensor = keras.layers.Dense(dim, activation='softmax')(tensor)
         output_tensors.append(output_tensor)
     clf = keras.models.Model(input_tensor, output_tensors)
@@ -56,7 +56,7 @@ def build():
     """
     构建分类器
     """
-    X_train, y_train, X_val, y_val, y_shape = feature.bow_mixture.build_train(
+    X_train, y_train, X_val, y_val, y_shape = feature.bow_share.build_train(
         validation_split=0.1, sparse=param['sparse'])
     y_train_split = []
     y_val_split = []
@@ -73,8 +73,7 @@ def build():
                                                        file=_file_name))
     checkpoint = keras.callbacks.ModelCheckpoint(best_model_path, verbose=1,
                                                  save_best_only=True)
-    earlystop = keras.callbacks.EarlyStopping(patience=5,
-                                              verbose=1)
+    earlystop = keras.callbacks.EarlyStopping(patience=5, verbose=1)
     clf.fit(X_train, y_train_split, batch_size=param['batch_size'],
             nb_epoch=param['nb_epoch'], validation_data=(X_val, y_val_split),
             shuffle=True, callbacks=[checkpoint, earlystop])
@@ -97,7 +96,7 @@ def run():
 
     clf = build()
 
-    X_test = feature.bow_mixture.build_test(sparse=param['sparse'])
+    X_test = feature.bow_share.build_test(sparse=param['sparse'])
 
     pred_age, pred_gender, pred_education = clf.predict(X_test)
     pred_age = pred_age.argmax(axis=-1).flatten()

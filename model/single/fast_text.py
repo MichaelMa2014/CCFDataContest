@@ -19,13 +19,13 @@ import keras
 import keras.utils.visualize_util
 
 import conf
-import feature.ngram
+import feature.wv
 import submissions
 import util
 
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
-param = {'ngram': 1, 'sparse': False, 'batch_size': 128, 'age': 40,
-         'gender': 40, 'education': 40}
+param = {'sparse': False, 'batch_size': 128, 'age': 40, 'gender': 40,
+         'education': 40}
 
 
 def build_clf(input_dim, output_dim, max_feature, word_vec_dim=100,
@@ -65,18 +65,17 @@ def build(label):
     构建分类器
     :param str|unicode label: 类别标签
     """
-    X_train, y_train, X_val, y_val, max_feature = feature.ngram.build_train(
-        label, validation_split=0.1, dummy=True, ngram=param['ngram'],
-        sparse=param['sparse'])
+    X_train, y_train, X_val, y_val, max_feature = feature.wv.build_train(
+        label, validation_split=0.1, dummy=True, sparse=param['sparse'])
     dir_path = '{temp}/{file}'.format(temp=conf.TEMP_DIR, file=_file_name)
     if not os.path.exists(dir_path):
         os.mkdir(dir_path)
     best_model_path = '{dir}/{label}_best.hdf'.format(dir=dir_path, label=label)
 
     clf = build_clf(X_train.shape[1], y_train.shape[1], max_feature,
-                    img_name='{img}/{file}_{label}_{n}gram.png'.format(
-                        img=conf.IMG_DIR, file=_file_name, label=label,
-                        n=param['ngram']))
+                    img_name='{img}/{file}_{label}.png'.format(img=conf.IMG_DIR,
+                                                               file=_file_name,
+                                                               label=label))
     checkpoint = keras.callbacks.ModelCheckpoint(best_model_path,
                                                  monitor='val_acc', verbose=1,
                                                  save_best_only=True)
@@ -94,9 +93,6 @@ def build(label):
 
 
 def run():
-    # TODO: 目前尚不能开启ngram>1，原因在于即使是ngram=2，max_feature也会爆炸到在8G内存下神经网络无法存放（Embedding层抛出MemoryError）
-    assert param['ngram'] == 1
-
     util.logger.info('Fast Text')
     util.init_random()
 
@@ -107,13 +103,11 @@ def run():
     acc_final = (acc_age + acc_gender + acc_education) / 3
     util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
-    X_test = feature.ngram.build_test(ngram=param['ngram'],
-                                      sparse=param['sparse'])
+    X_test = feature.wv.build_test(sparse=param['sparse'])
 
     pred_age = clf_age.predict(X_test).argmax(axis=-1).flatten()
     pred_gender = clf_gender.predict(X_test).argmax(axis=-1).flatten()
     pred_education = clf_education.predict(X_test).argmax(axis=-1).flatten()
 
     submissions.save_csv(pred_age, pred_gender, pred_education,
-                         '{file}_{n}gram.csv'.format(file=_file_name,
-                                                     n=param['ngram']))
+                         '{file}.csv'.format(file=_file_name))

@@ -10,7 +10,7 @@ from __future__ import with_statement
 
 import os
 
-import feature.ngram
+import feature.wv
 import model.single
 import model.ensemble
 import submissions
@@ -30,8 +30,7 @@ def run():
     acc_final = (acc_age + acc_gender + acc_education) / 3
     util.logger.info('acc_final: {acc}'.format(acc=acc_final))
 
-    X_test = feature.ngram.build_test(
-        ngram=model.single.fast_text.param['ngram'],
+    X_test = feature.wv.build_test(
         sparse=model.single.fast_text.param['sparse'])
     pred_gender = clf_gender.predict(X_test).argmax(axis=-1).flatten()
     pred_education = clf_education.predict(X_test).argmax(axis=-1).flatten()

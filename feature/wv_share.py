@@ -10,6 +10,7 @@ from __future__ import with_statement
 
 import os
 
+import keras.preprocessing.sequence
 import keras.utils.np_utils
 import numpy
 import scipy.io
@@ -24,18 +25,22 @@ import util
 _file_name = os.path.splitext(os.path.basename(__file__))[0]
 
 
-def _transform(rows, sparse):
+def _transform(rows, sparse=True):
     """
-    转化成词频向量
+    转化成序列矩阵
     :param numpy.ndarray rows:
     :param bool sparse:
     :rtype: scipy.sparse.spmatrix|numpy.ndarray
     """
-    vectorizer = feature.build_vectorizer(rows)
-    vectors = vectorizer.transform(rows)
-    util.logger.info(
-        'tf-idf vectors shape: {shape}'.format(shape=vectors.shape))
-    return vectors if sparse else vectors.toarray()
+    tokenizer = feature.build_tokenizer(rows)
+    sequences = tokenizer.texts_to_sequences(
+        line.encode('utf-8') for line in rows)
+    sequences = keras.preprocessing.sequence.pad_sequences(sequences,
+                                                           maxlen=2000,
+                                                           padding='post',
+                                                           truncating='post')
+    util.logger.info('sequences shape: {shape}'.format(shape=sequences.shape))
+    return scipy.sparse.csr_matrix(sequences) if sparse else sequences
 
 
 def build_train(validation_split=0.0, sparse=True):
@@ -50,7 +55,7 @@ def build_train(validation_split=0.0, sparse=True):
         temp=conf.TEMP_DIR, file=_file_name, format='mtx' if sparse else 'npy'))
     if not os.path.exists(path):
         query = data.load_train('query')
-        query = data.process_data(query, remove_stopwords=True)
+        query = data.process_data(query, remove_stopwords=False)
         query = _transform(query, sparse)
         if sparse:
             scipy.io.mmwrite(path, query)
@@ -59,16 +64,18 @@ def build_train(validation_split=0.0, sparse=True):
 
     query = scipy.io.mmread(path).tocsr() if sparse else numpy.load(path)
 
+    max_feature = query.max()
+
     # 去掉label未知的数据
     label_rows = numpy.array(
         [data.load_train(label) for label in data.label_col]).transpose()
     query = query[label_rows.all(axis=1)]
+    label_rows = label_rows[label_rows.all(axis=1)]
 
-    stratify = label_rows[label_rows.all(axis=1)]
     target = []
     y_shape = []
-    for col in range(stratify.shape[1]):
-        dummy = keras.utils.np_utils.to_categorical(stratify[:, col])
+    for col in range(label_rows.shape[1]):
+        dummy = keras.utils.np_utils.to_categorical(label_rows[:, col])
         target.append(dummy)
         y_shape.append(dummy.shape[1])
     target = numpy.concatenate(target, axis=1)
@@ -76,12 +83,9 @@ def build_train(validation_split=0.0, sparse=True):
 
     if validation_split == 0.0:
         return query, target
-    # X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(
-    #     query, target, test_size=validation_split, random_state=util.seed,
-    #     stratify=stratify)
     X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(
         query, target, test_size=validation_split, random_state=util.seed)
-    return X_train, y_train, X_val, y_val, y_shape
+    return X_train, y_train, X_val, y_val, y_shape, max_feature
 
 
 def build_test(sparse=True):
@@ -96,14 +100,13 @@ def build_test(sparse=True):
         temp=conf.TEMP_DIR, file=_file_name, format='mtx' if sparse else 'npy'))
     if not os.path.exists(path):
         query = data.load_test('query')
-        query = data.process_data(query, remove_stopwords=True)
+        query = data.process_data(query, remove_stopwords=False)
         query = _transform(query, sparse)
         if sparse:
             scipy.io.mmwrite(path, query)
         else:
             numpy.save(path, query)
 
-    query = scipy.io.mmread(path).tocsr() if sparse else numpy.load(
-        path, mmap_mode='r+')
+    query = scipy.io.mmread(path).tocsr() if sparse else numpy.load(path)
     util.logger.info('test_df shape: {shape}'.format(shape=query.shape))
     return query
